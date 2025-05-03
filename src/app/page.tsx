@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage(""); // Reset previous error messages
+    setErrorMessage(""); 
 
     if (!nisn || !katasandi) {
       setErrorMessage("NISN dan Kata Sandi harus diisi.");
@@ -39,7 +39,6 @@ export default function LoginPage() {
 
       console.log("✅ Respons dari API /auth/login:", response.data);
 
-      // Check if response contains token
       const token = response.data?.aksesToken;
       if (token) {
         console.log("✅ Token diterima dan disimpan:", token);

@@ -1,64 +1,132 @@
-import React from "react";
-import { BiMale, BiFemale } from "react-icons/bi"; // Ikon yang sesuai
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-  CardFooter,
-} from "@/components/ui/card";
+"use client";
+import React, { useEffect, useState } from "react";
+import { FaUser } from "react-icons/fa"; // Ikon pengguna generik
 import { Button } from "@/components/ui/button";
+import CompanyCard from "@/components/CompanyCard"; // Mengimpor komponen CompanyCard
+import { Card, CardContent, CardDescription } from "@/components/ui/card";
+import axiosInstance from "@/lib/axios";
 
-const HomePage = () => {
-  const userGender = "female"; // "male" atau "female"
+interface User {
+  id: number;
+  nama: string;
+  email: string;
+  telepon?: string;
+  alamat?: string;
+  peran: string;
+}
+
+// Data Perusahaan dan Lowongan Pekerjaan
+const companies = [
+  {
+    name: "Tech Corp",
+    description:
+      "Tech Corp adalah perusahaan teknologi terkemuka yang fokus pada pengembangan perangkat lunak dan aplikasi inovatif.",
+    jobs: [
+      {
+        title: "Pengembang Web",
+        location: "Jakarta, Indonesia",
+        type: "Penuh Waktu",
+      },
+      {
+        title: "Desainer UI/UX",
+        location: "Bandung, Indonesia",
+        type: "Paruh Waktu",
+      },
+    ],
+    imageUrl: "/images/tech-corp-logo.png", // Gambar Perusahaan
+  },
+  {
+    name: "Creative Agency",
+    description:
+      "Creative Agency adalah agensi kreatif yang mengkhususkan diri dalam desain grafis dan pemasaran digital.",
+    jobs: [
+      {
+        title: "Desainer Grafis",
+        location: "Surabaya, Indonesia",
+        type: "Penuh Waktu",
+      },
+    ],
+    imageUrl: "/images/creative-agency-logo.png", // Gambar Perusahaan
+  },
+  {
+    name: "Business Solutions",
+    description:
+      "Business Solutions menyediakan solusi manajemen proyek dan konsultasi bisnis untuk perusahaan-perusahaan besar.",
+    jobs: [
+      {
+        title: "Manajer Proyek",
+        location: "Medan, Indonesia",
+        type: "Penuh Waktu",
+      },
+    ],
+    imageUrl: "/images/business-solutions-logo.png", // Gambar Perusahaan
+  },
+];
+
+const HomePage: React.FC = () => {
+  // Move useState and useEffect inside HomePage component
+  const [userData, setUserData] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axiosInstance.get("/auth/profile"); // Mengambil data pengguna
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Error fetching user data", error);
+      }
+    };
+
+    fetchUserData(); // Call the function to fetch data
+  }, []); // Empty dependency array ensures it only runs once after the initial render
 
   return (
-    <div className="container mx-auto p-6">
-      {/* User Info Card */}
-      <Card className="mb-8 shadow-lg">
-        <CardHeader>
-          <CardTitle>User Information</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center space-x-6">
-          {/* Gender Icon Avatar */}
-          <div className="flex-shrink-0">
-            {userGender === "female" ? (
-              <BiFemale className="w-24 h-24 text-pink-500 rounded-full border-2 border-pink-300 p-2" />
-            ) : (
-              <BiMale className="w-24 h-24 text-blue-500 rounded-full border-2 border-blue-300 p-2" />
-            )}
-          </div>
-
-          {/* User Info */}
-          <div>
-            <CardDescription>
-              <h4 className="font-semibold text-xl">John Doe</h4>
-              <p className="text-sm text-muted">Web Developer</p>
-              <p className="text-sm">Email: johndoe@example.com</p>
-              <p className="text-sm">Phone: +123456789</p>
-            </CardDescription>
-
-            {/* Gender label */}
-            <div className="mt-4 flex items-center">
-              {userGender === "female" ? (
-                <BiFemale className="text-pink-500 text-xl" />
-              ) : (
-                <BiMale className="text-blue-500 text-xl" />
-              )}
-              <p className="ml-2 text-sm capitalize">{userGender}</p>
+    <main className="container mx-auto p-6">
+      {/* Kartu Informasi Pengguna */}
+      {userData && (
+        <Card className="mb-8 shadow-lg">
+          <CardContent className="flex items-center space-x-6">
+            {/* Avatar Ikon Pengguna */}
+            <div className="flex-shrink-0">
+              <FaUser className="w-24 h-24 text-gray-500 rounded-full border-2 border-gray-300 p-2" />
             </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Button */}
+            {/* Informasi Pengguna */}
+            <div>
+              <CardDescription>
+                <h4 className="font-bold text-black text-2xl">{userData.nama}</h4>
+                <p className="text-sm mt-2">Email: {userData.email}</p>
+                <p className="text-sm mt-2">Telepon: {userData.telepon}</p>
+                <p className="text-sm mt-2">Alamat: {userData.alamat}</p>
+                <p className="text-sm mt-2">Status: {userData.peran}</p>
+              </CardDescription>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tombol Lihat Kategori Pekerjaan */}
       <div className="mb-6">
-        <Button size="lg" className="w-full" variant="default">
-          View Job Categories
+        <Button
+          size="lg"
+          className="w-full"
+          variant="default"
+          onClick={() => {
+            // Define an action for the button, e.g., navigate to a job categories page
+            console.log("Lihat kategori pekerjaan");
+          }}
+        >
+          Lihat Kategori Pekerjaan
         </Button>
       </div>
-    </div>
+
+      {/* Menampilkan beberapa CompanyCard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {companies.map((company, index) => (
+          <CompanyCard key={index} company={company} />
+        ))}
+      </div>
+    </main>
   );
 };
 

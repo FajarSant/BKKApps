@@ -13,7 +13,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     // Add authorization header if a token exists in localStorage or cookies
-    const token = localStorage.getItem('token') || '';  // or get it from cookies/session storage
+    const token = localStorage.getItem('bkk_token') || '';  // or get it from cookies/session storage
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
