@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FaUser } from "react-icons/fa"; // Ikon pengguna generik
+import { FaUser } from "react-icons/fa"; 
 import { Button } from "@/components/ui/button";
-import CompanyCard from "@/components/CompanyCard"; // Mengimpor komponen CompanyCard
+import CompanyCard from "@/components/CompanyCard";
 import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import axiosInstance from "@/lib/axios";
 
@@ -15,7 +15,6 @@ interface User {
   peran: string;
 }
 
-// Data Perusahaan dan Lowongan Pekerjaan
 const companies = [
   {
     name: "Tech Corp",
@@ -64,21 +63,20 @@ const companies = [
 ];
 
 const HomePage: React.FC = () => {
-  // Move useState and useEffect inside HomePage component
   const [userData, setUserData] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axiosInstance.get("/auth/profile"); // Mengambil data pengguna
+        const response = await axiosInstance.get("/auth/profile"); 
         setUserData(response.data);
       } catch (error) {
         console.error("Error fetching user data", error);
       }
     };
 
-    fetchUserData(); // Call the function to fetch data
-  }, []); // Empty dependency array ensures it only runs once after the initial render
+    fetchUserData(); 
+  }, []); 
 
   return (
     <main className="container mx-auto p-6">

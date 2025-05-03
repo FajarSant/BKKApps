@@ -12,7 +12,7 @@ interface NavLinkProps {
 }
 
 const NavLink = ({ href, icon, label }: NavLinkProps) => {
-  const pathname = usePathname(); // Mendapatkan path saat ini
+  const pathname = usePathname();
   const isActive = pathname === href;
 
   return (

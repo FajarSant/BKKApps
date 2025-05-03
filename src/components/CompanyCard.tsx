@@ -1,7 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 
-// Mendefinisikan tipe data untuk lowongan pekerjaan
 interface Job {
   title: string;
   location: string;
@@ -13,7 +12,7 @@ interface CompanyCardProps {
     name: string;
     description: string;
     jobs: Job[];
-    imageUrl: string; // Properti untuk URL gambar perusahaan
+    imageUrl: string;
   };
 }
 

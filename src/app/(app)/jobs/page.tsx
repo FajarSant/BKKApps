@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import SearchInput from "@/components/SearchInput";
 import CardJob from "@/components/CardJob";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuContent } from "@/components/ui/dropdown-menu"; // Impor komponen dropdown dari shadcn
+import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuContent } from "@/components/ui/dropdown-menu";
 
 const page = () => {
   const [category, setCategory] = useState<string>("");
@@ -14,7 +14,6 @@ const page = () => {
 
   return (
     <main className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
-      {/* Header */}
       <header className="text-center mb-8">
         <h1 className="text-3xl font-semibold text-gray-800">Cari Pekerjaan Impian Anda</h1>
         <p className="text-lg text-gray-600 mt-2">

@@ -8,7 +8,7 @@ import axiosInstance from "@/lib/axios";
 import axios from "axios";
 import Image from "next/image";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { useRouter } from "next/navigation"; // Import useRouter for navigation
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -97,7 +97,7 @@ export default function LoginPage() {
         });
       }
     } finally {
-      setLoading(false); // Reset loading state after request completes
+      setLoading(false);
     }
   };
 
