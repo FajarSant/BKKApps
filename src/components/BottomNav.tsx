@@ -12,25 +12,25 @@ import {
         <div className="flex justify-around p-3">
           {/* Home */}
           <NavLink
-            href="/home"
+            href="/Id/home"
             icon={<FaHome className="w-6 h-6" />}
             label="Home"
           />
           {/* Jobs */}
           <NavLink
-            href="/jobs"
+            href="/Id/jobs"
             icon={<FaBriefcase className="w-6 h-6" />}
             label="Jobs"
           />
           {/* Simpan */}
           <NavLink
-            href="/simpan"
+            href="/Id/simpan"
             icon={<FaBookmark className="w-6 h-6" />}
             label="Simpan"
           />
           {/* Profile */}
           <NavLink
-            href="/profile"
+            href="/Id/profile"
             icon={<FaUser className="w-6 h-6" />}
             label="Profile"
           />

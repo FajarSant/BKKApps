@@ -32,7 +32,7 @@ const companies = [
         type: "Paruh Waktu",
       },
     ],
-    imageUrl: "/images/tech-corp-logo.png", // Gambar Perusahaan
+    imageUrl: "https://placehold.co/600x400/png", 
   },
   {
     name: "Creative Agency",
@@ -45,7 +45,7 @@ const companies = [
         type: "Penuh Waktu",
       },
     ],
-    imageUrl: "/images/creative-agency-logo.png", // Gambar Perusahaan
+    imageUrl: "https://placehold.co/600x400/png", 
   },
   {
     name: "Business Solutions",
@@ -58,7 +58,7 @@ const companies = [
         type: "Penuh Waktu",
       },
     ],
-    imageUrl: "/images/business-solutions-logo.png", // Gambar Perusahaan
+    imageUrl: "https://placehold.co/600x400/png", 
   },
 ];
 
@@ -119,7 +119,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Menampilkan beberapa CompanyCard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {companies.map((company, index) => (
           <CompanyCard key={index} company={company} />
         ))}

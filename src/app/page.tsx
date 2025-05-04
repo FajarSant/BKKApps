@@ -106,7 +106,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md shadow-2xl border-none bg-white rounded-lg">
         <div className="flex flex-col items-center gap-4 py-6">
           <Image
-            src="/logo.png"
+            src="https://placehold.co/600x400/png"
             alt="Logo Aplikasi"
             width={80}
             height={80}
