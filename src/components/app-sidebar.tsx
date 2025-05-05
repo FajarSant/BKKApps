@@ -1,25 +1,16 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import {
-  Home,
-  User,
-  FileBadge,
-  Code2,
-  Mail,
-  BookText,
-  BadgeCheck,
-  Github,
-  Linkedin,
+  LayoutDashboard,
   Briefcase,
   UserPlus2,
   Settings,
   LogOut,
-  LayoutDashboard,
+  Building,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-
 import {
   Sidebar,
   SidebarContent,
@@ -28,50 +19,95 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"; 
 import Link from "next/link";
+import axiosInstance from "@/lib/axios";
 
 export const menuItems = [
   {
     title: "Dashboard",
     url: "/admin/dashboard",
     icon: LayoutDashboard,
-    color: "#3B82F6", 
+    color: "#3B82F6",
+  },
+  {
+    title: "Manajemen Perusahaan",
+    url: "/admin/perusahaan",
+    icon: Building,
+    color: "#8B5CF6",
   },
   {
     title: "Manajemen Lowongan",
     url: "/admin/lowongan",
     icon: Briefcase,
-    color: "#10B981", // hijau (Tailwind green-500)
+    color: "#10B981",
   },
   {
     title: "Manajemen Pengguna",
     url: "/admin/pengguna",
     icon: UserPlus2,
-    color: "#F59E0B", // kuning (Tailwind amber-500)
+    color: "#F59E0B",
   },
   {
     title: "Setting",
     url: "/admin/setting",
     icon: Settings,
-    color: "#6366F1", // indigo
+    color: "#6366F1",
   },
   {
-    title: "Tombol Logout",
+    title: "Logout",
     url: "/admin/logout",
     icon: LogOut,
-    color: "#EF4444", // merah (Tailwind red-500)
+    color: "#EF4444",
   },
 ];
 
+interface Profile {
+  nama: string;
+  peran: string;
+  alamat: string;
+  telepon: string;
+  jenisKelamin: string;
+}
+
 export function AppSidebar() {
   const pathname = usePathname();
+
+  const [profile, setProfile] = useState<Profile>({
+    nama: "",
+    peran: "",
+    alamat: "",
+    telepon: "",
+    jenisKelamin: "",
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axiosInstance.get("/auth/profile");
+        setProfile({
+          nama: response.data.nama || "Nama Tidak Tersedia",
+          peran: response.data.peran || "Peran Tidak Tersedia",
+
+          alamat: response.data.alamat || "Alamat Tidak Tersedia",
+          telepon: response.data.telepon || "Telepon Tidak Tersedia",
+          jenisKelamin:
+            response.data.jenisKelamin || "Jenis Kelamin Tidak Tersedia",
+        });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent className="flex flex-col items-center py-8 px-4 mb-2 border-b-4">
+            {/* Menampilkan foto profil */}
             <div className="h-20 w-20 overflow-hidden rounded-full">
               <Image
                 src="/images/foto-saya.png"
@@ -80,12 +116,12 @@ export function AppSidebar() {
                 height={128}
                 className="object-cover"
                 priority
-                loading="eager"
               />
             </div>
 
-            <h1 className="text-xl font-bold mt-4">Fajar Santoso</h1>
-            <p className="text-gray-500">Web Developer</p>
+            {/* Menampilkan nama dan peran pengguna */}
+            <h1 className="text-xl font-bold mt-4">{profile.nama}</h1>
+            <p className="text-gray-500">{profile.peran}</p>
           </SidebarGroupContent>
 
           <SidebarGroupContent>
@@ -109,7 +145,6 @@ export function AppSidebar() {
                         <item.icon
                           className="w-6 h-6"
                           color={isActive ? "#ffffff" : item.color}
-
                         />
                         <span className="text-lg">{item.title}</span>
                       </Link>
@@ -119,8 +154,6 @@ export function AppSidebar() {
               })}
             </SidebarMenu>
           </SidebarGroupContent>
-
-          {/* Social Links */}
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
