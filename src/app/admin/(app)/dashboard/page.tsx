@@ -7,66 +7,22 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import React from "react";
-import { FaBook, FaBriefcase, FaBuilding, FaCog, FaEnvelope, FaUsers, FaUserShield } from "react-icons/fa";
+import {
+  FaBook,
+  FaBriefcase,
+  FaBuilding,
+  FaCog,
+  FaEnvelope,
+  FaUsers,
+  FaUserShield,
+} from "react-icons/fa";
 
-const cardData = [
-  {
-    title: "Jumlah Lowongan",
-    count: 100,
-    icon: <FaBriefcase />,
-    color: "text-blue-600",
-  },
-  {
-    title: "Jumlah Perusahaan",
-    count: 100,
-    icon: <FaBuilding />,
-    color: "text-green-600",
-  },
-  {
-    title: "Jumlah Pengguna",
-    count: 100,
-    icon: <FaUsers />,
-    color: "text-purple-600",
-  },
-  {
-    title: "Jumlah Admin",
-    count: 100,
-    icon: <FaUserShield />,
-    color: "text-red-600",
-  },
-];
 const page = () => {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {cardData.map((card, index) => (
-          <Card
-            key={index}
-            className="relative overflow-hidden rounded-xl shadow-md hover:shadow-xl transition duration-300 bg-white border border-gray-200"
-          >
-            {/* Background Icon Centered */}
-            <div
-              className={`absolute inset-0 flex items-center justify-center ${card.color} opacity-20`}
-            >
-              <div className={`text-[6rem]`}>{card.icon}</div>
-            </div>
-
-            {/* Content Layer */}
-            <CardHeader className="relative z-10 flex flex-col items-center justify-center text-center p-2 space-y-1">
-              <CardTitle className="text-2xl font-medium text-gray-800">
-                {card.title}
-              </CardTitle>
-              <CardDescription className={`text-4xl font-bold ${card.color}`}>
-                {card.count}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
-
       <div>
-        <section className="mt-16">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+        <section className="mt-4">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-16 text-center">
             Informasi & Navigasi
           </h2>
 
