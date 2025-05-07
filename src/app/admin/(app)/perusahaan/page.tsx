@@ -19,12 +19,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import {
-  AiOutlineEye,
-  AiOutlineEdit,
-  AiOutlineDelete,
-} from "react-icons/ai";
+import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import Swal from "sweetalert2";
+import { FaPlus } from "react-icons/fa";
+import ImportButtonExcel from "@/components/Import-Button-Excel";
+import ExportButtonExcel from "@/components/Export-Button-Excel";
+import SearchInput from "@/components/SearchInput";
+import Modal from "@/components/Modal";
 
 interface Perusahaan {
   id: number;
@@ -38,6 +39,15 @@ interface Perusahaan {
 
 export default function DashboardPerusahaan() {
   const [perusahaan, setPerusahaan] = useState<Perusahaan[]>([]);
+
+  const handleUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await axiosInstance.post("/api/dashboard-upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,10 +65,9 @@ export default function DashboardPerusahaan() {
         console.error("Gagal mengambil data perusahaan:", error);
       }
     };
-  
+
     fetchData();
   }, []);
-  
 
   const handleDelete = (id: number) => {
     Swal.fire({
@@ -84,9 +93,19 @@ export default function DashboardPerusahaan() {
   return (
     <TooltipProvider>
       <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold">Dashboard Perusahaan</h2>
-          <Button variant="default">Tambah Perusahaan</Button>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+            <Button variant="default" size="sm">
+              <FaPlus className="w-4 h-4 mr-1" /> Tambah Pengguna
+            </Button>
+            <ImportButtonExcel onUpload={handleUpload} />
+            <Modal />
+            <ExportButtonExcel />
+          </div>
+
+          <div className="w-full md:w-1/3 md:text-right">
+            <SearchInput />
+          </div>
         </div>
 
         <Table>

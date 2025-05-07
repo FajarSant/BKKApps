@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import axiosInstance from "@/lib/axios";
 
 import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { FaPlus } from "react-icons/fa";
@@ -41,6 +42,15 @@ const data = [
 ];
 
 export default function DashboardLowongan() {
+
+  const handleUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await axiosInstance.post("/api/dashboard-upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  };
   const handleDelete = (id: number) => {
     Swal.fire({
       title: "Apakah kamu yakin?",
@@ -67,7 +77,7 @@ export default function DashboardLowongan() {
             <Button variant="default" size="sm">
               <FaPlus className="w-4 h-4" /> Tambah Pengguna
             </Button>
-            <ImportButtonExcel />
+            <ImportButtonExcel onUpload={handleUpload} />
             <ExportButtonExcel />
           </div>
 
@@ -94,7 +104,7 @@ export default function DashboardLowongan() {
           <TableBody>
             {data.map((lowongan) => (
               <TableRow key={lowongan.id}>
-                <TableCell>{lowongan.nama}</TableCell>
+                <TableCell className="font-medium">{lowongan.nama}</TableCell>
                 <TableCell>{lowongan.ketentuan}</TableCell>
                 <TableCell>{lowongan.persyaratan}</TableCell>
                 <TableCell>{lowongan.jenisPekerjaan}</TableCell>
