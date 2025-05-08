@@ -42,7 +42,6 @@ const data = [
 ];
 
 export default function DashboardLowongan() {
-
   const handleUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -50,6 +49,24 @@ export default function DashboardLowongan() {
     await axiosInstance.post("/api/dashboard-upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+  };
+  const handleExportExcel = async () => {
+    try {
+      const response = await axiosInstance.get("/export/excel", {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "data-export.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export gagal:", error);
+    }
   };
   const handleDelete = (id: number) => {
     Swal.fire({
@@ -78,7 +95,7 @@ export default function DashboardLowongan() {
               <FaPlus className="w-4 h-4" /> Tambah Pengguna
             </Button>
             <ImportButtonExcel onUpload={handleUpload} />
-            <ExportButtonExcel />
+            <ExportButtonExcel onClick={handleExportExcel} />
           </div>
 
           {/* Search di kanan */}

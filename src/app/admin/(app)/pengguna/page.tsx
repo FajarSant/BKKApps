@@ -62,6 +62,24 @@ export default function DashboardPengguna() {
       headers: { "Content-Type": "multipart/form-data" },
     });
   };
+  const handleExportExcel = async () => {
+    try {
+      const response = await axiosInstance.get("/export/excel", {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "data-export.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export gagal:", error);
+    }
+  };
 
   const handleDelete = async (id: number) => {
     Swal.fire({
@@ -98,7 +116,7 @@ export default function DashboardPengguna() {
               <FaPlus className="w-4 h-4 mr-1" /> Tambah Pengguna
             </Button>
             <ImportButtonExcel onUpload={handleUpload} />
-            <ExportButtonExcel />
+            <ExportButtonExcel onClick={handleExportExcel} />
           </div>
 
           <div className="w-full md:w-1/3 md:text-right">
