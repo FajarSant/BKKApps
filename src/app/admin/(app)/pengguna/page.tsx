@@ -45,7 +45,7 @@ export default function DashboardPengguna() {
 
   const fetchData = async () => {
     try {
-      const response = await axiosInstance.get("/pengguna");
+      const response = await axiosInstance.get("/pengguna/getall");
       setData(response.data);
     } catch (error) {
       console.error("Gagal mengambil data pengguna:", error);
@@ -58,13 +58,13 @@ export default function DashboardPengguna() {
     const formData = new FormData();
     formData.append("file", file);
 
-    await axiosInstance.post("/api/dashboard-upload", formData, {
+    await axiosInstance.post("/pengguna/import", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   };
   const handleExportExcel = async () => {
     try {
-      const response = await axiosInstance.get("/export/excel", {
+      const response = await axiosInstance.get("/pengguna/export", {
         responseType: "blob",
       });
 

@@ -21,11 +21,10 @@ import {
 
 import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import Swal from "sweetalert2";
-import { FaPlus } from "react-icons/fa";
 import ImportButtonExcel from "@/components/Import-Button-Excel";
 import ExportButtonExcel from "@/components/Export-Button-Excel";
 import SearchInput from "@/components/SearchInput";
-import Modal from "@/components/Modal";
+import BtnTambahPengguna from "@/components/BtnTambahPengguna";
 
 interface Perusahaan {
   id: number;
@@ -107,17 +106,22 @@ export default function DashboardPerusahaan() {
       }
     });
   };
+  const formFields = [
+    { label: "Nama", name: "nama", placeholder: "Masukkan nama" },
+    { label: "Email", name: "email", type: "email", placeholder: "Masukkan email" },
+  ];
+  
+  const handleSubmit = (data: FormData) => {
+    console.log(data.get("nama"), data.get("email"));
+  };
 
   return (
     <TooltipProvider>
       <div className="p-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <Button variant="default" size="sm">
-              <FaPlus className="w-4 h-4 mr-1" /> Tambah Pengguna
-            </Button>
-            <ImportButtonExcel onUpload={handleUpload} />
-            <Modal />
+          <BtnTambahPengguna formFields={formFields} onSubmit={handleSubmit} />
+          <ImportButtonExcel onUpload={handleUpload} />
             <ExportButtonExcel onClick={handleExportExcel} />
           </div>
 
