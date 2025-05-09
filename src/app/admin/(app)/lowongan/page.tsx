@@ -24,42 +24,75 @@ import axiosInstance from "@/lib/axios";
 import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { FaPlus } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { useEffect, useState } from "react";
 
-const data = [
-  {
-    id: 1,
-    nama: "Software Engineer",
-    ketentuan: "Full-time, remote, fleksibel",
-    persyaratan: "Pengalaman React, Node.js",
-    jenisPekerjaan: "Full-Time",
-    perusahaan: {
-      id: 1,
-      nama: "PT Teknologi Inovatif",
-    },
-    dibuatPada: "2025-05-01T10:00:00Z",
-    expiredAt: "2025-06-01T10:00:00Z",
-  },
-];
+// Define the types based on the API response structure
+interface Lowongan {
+  id: number;
+  nama: string;
+  ketentuan: string;
+  persyaratan: string;
+  salary?: string;
+  jenisPekerjaan: string;
+  perusahaan: {
+    id: number;
+    nama: string;
+  };
+  dibuatPada: string;
+  expiredAt?: string;
+  linkPendaftaran?: string;
+}
 
 export default function DashboardLowongan() {
+  const [lowonganData, setLowonganData] = useState<Lowongan[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Fetch data from the API
+  useEffect(() => {
+    const fetchLowongan = async () => {
+      try {
+        const response = await axiosInstance.get("/lowongan/getall");
+        console.log(response.data);
+        const data = response.data?.data || [];
+        setLowonganData(data);
+      } catch (error) {
+        console.error("Gagal memuat data lowongan:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLowongan();
+  }, []);
+
+  // Handle file upload (Import)
   const handleUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    await axiosInstance.post("/api/dashboard-upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    try {
+      await axiosInstance.post("/lowongan/import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      // After successful import, refetch or update the state accordingly
+      const response = await axiosInstance.get("/lowongan/getall");
+      setLowonganData(response.data?.data || []);
+    } catch (error) {
+      console.error("Gagal mengimpor data:", error);
+    }
   };
+
+  // Handle exporting to Excel
   const handleExportExcel = async () => {
     try {
-      const response = await axiosInstance.get("/export/excel", {
+      const response = await axiosInstance.get("/lowongan/export", {
         responseType: "blob",
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "data-export.xlsx");
+      link.setAttribute("download", "data-Lowongan.xlsx");
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -68,6 +101,8 @@ export default function DashboardLowongan() {
       console.error("Export gagal:", error);
     }
   };
+
+  // Handle delete confirmation
   const handleDelete = (id: number) => {
     Swal.fire({
       title: "Apakah kamu yakin?",
@@ -77,12 +112,35 @@ export default function DashboardLowongan() {
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Ya, hapus!",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        // TODO: Call delete function here
-        Swal.fire("Dihapus!", "Lowongan telah dihapus.", "success");
+        try {
+          const response = await axiosInstance.delete(`/lowongan/delete/${id}`);
+          if (response.status === 200) {
+            Swal.fire("Dihapus!", "Lowongan telah dihapus.", "success");
+            // Remove the deleted lowongan from the state
+            setLowonganData((prevData) =>
+              prevData.filter((lowongan) => lowongan.id !== id)
+            );
+          } else {
+            Swal.fire("Gagal!", "Gagal menghapus lowongan.", "error");
+          }
+        } catch (error) {
+          Swal.fire("Gagal!", "Terjadi kesalahan saat menghapus lowongan.", "error");
+          console.error("Error deleting lowongan:", error);
+        }
       }
     });
+  };
+
+  // Handle Edit (e.g., after saving changes)
+  const handleEdit = (updatedLowongan: Lowongan) => {
+    // Update the edited lowongan in the state
+    setLowonganData((prevData) =>
+      prevData.map((lowongan) =>
+        lowongan.id === updatedLowongan.id ? updatedLowongan : lowongan
+      )
+    );
   };
 
   return (
@@ -104,70 +162,74 @@ export default function DashboardLowongan() {
           </div>
         </div>
 
-        <Table>
-          <TableCaption>Daftar lowongan pekerjaan yang tersedia.</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Ketentuan</TableHead>
-              <TableHead>Persyaratan</TableHead>
-              <TableHead>Jenis</TableHead>
-              <TableHead>Perusahaan</TableHead>
-              <TableHead>Dibuat</TableHead>
-              <TableHead>Expired</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((lowongan) => (
-              <TableRow key={lowongan.id}>
-                <TableCell className="font-medium">{lowongan.nama}</TableCell>
-                <TableCell>{lowongan.ketentuan}</TableCell>
-                <TableCell>{lowongan.persyaratan}</TableCell>
-                <TableCell>{lowongan.jenisPekerjaan}</TableCell>
-                <TableCell>{lowongan.perusahaan.nama}</TableCell>
-                <TableCell>
-                  {new Date(lowongan.dibuatPada).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  {lowongan.expiredAt
-                    ? new Date(lowongan.expiredAt).toLocaleDateString()
-                    : "-"}
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <AiOutlineEye className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Lihat</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <AiOutlineEdit className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(lowongan.id)}
-                      >
-                        <AiOutlineDelete className="h-5 w-5 text-red-500" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Hapus</TooltipContent>
-                  </Tooltip>
-                </TableCell>
+        {loading ? (
+          <div>Loading...</div>
+        ) : (
+          <Table>
+            <TableCaption>Daftar lowongan pekerjaan yang tersedia.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nama</TableHead>
+                <TableHead>Ketentuan</TableHead>
+                <TableHead>Persyaratan</TableHead>
+                <TableHead>Jenis</TableHead>
+                <TableHead>Perusahaan</TableHead>
+                <TableHead>Dibuat</TableHead>
+                <TableHead>Expired</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {lowonganData.map((lowongan) => (
+                <TableRow key={lowongan.id}>
+                  <TableCell className="font-medium">{lowongan.nama}</TableCell>
+                  <TableCell>{lowongan.ketentuan}</TableCell>
+                  <TableCell>{lowongan.persyaratan}</TableCell>
+                  <TableCell>{lowongan.jenisPekerjaan}</TableCell>
+                  <TableCell>{lowongan.perusahaan.nama}</TableCell>
+                  <TableCell>
+                    {new Date(lowongan.dibuatPada).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {lowongan.expiredAt
+                      ? new Date(lowongan.expiredAt).toLocaleDateString()
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <AiOutlineEye className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Lihat</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <AiOutlineEdit className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(lowongan.id)}
+                        >
+                          <AiOutlineDelete className="h-5 w-5 text-red-500" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Hapus</TooltipContent>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
     </TooltipProvider>
   );

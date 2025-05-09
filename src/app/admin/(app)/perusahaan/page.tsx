@@ -39,17 +39,66 @@ interface Perusahaan {
 export default function DashboardPerusahaan() {
   const [perusahaan, setPerusahaan] = useState<Perusahaan[]>([]);
 
+  // Fetch Data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axiosInstance.get("/perusahaan/getall");
+        const data = Array.isArray(res.data) ? res.data : res.data.data;
+        if (Array.isArray(data)) {
+          setPerusahaan(data);
+        } else {
+          throw new Error("Format data tidak valid.");
+        }
+      } catch (error) {
+        console.error("Gagal mengambil data perusahaan:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Tambah Data
+  const handleSubmit = async (formData: FormData) => {
+    try {
+      const data = {
+        nama: formData.get("nama"),
+        email: formData.get("email"),
+      };
+
+      const response = await axiosInstance.post("/perusahaan/create", data);
+      setPerusahaan((prev) => [...prev, response.data]);
+
+      Swal.fire("Berhasil", "Perusahaan berhasil ditambahkan.", "success");
+    } catch (error) {
+      console.error("Tambah perusahaan error:", error);
+      Swal.fire("Gagal", "Tidak dapat menambah data.", "error");
+    }
+  };
+
+  // Import
   const handleUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
+    try {
+      await axiosInstance.post("/perusahaan/import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    await axiosInstance.post("/api/dashboard-upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+      const res = await axiosInstance.get("/perusahaan/getall");
+      const data = Array.isArray(res.data) ? res.data : res.data.data;
+      setPerusahaan(data);
+
+      Swal.fire("Berhasil", "Data berhasil diimpor.", "success");
+    } catch (error) {
+      console.error("Import perusahaan error:", error);
+      Swal.fire("Gagal", "Import data gagal.", "error");
+    }
   };
+
+  // Export
   const handleExportExcel = async () => {
     try {
-      const response = await axiosInstance.get("/export/excel", {
+      const response = await axiosInstance.get("/perusahaan/export", {
         responseType: "blob",
       });
 
@@ -66,26 +115,7 @@ export default function DashboardPerusahaan() {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axiosInstance.get("/perusahaan");
-        console.log("Response perusahaan:", res.data); // ⬅️ Log dulu
-        if (Array.isArray(res.data)) {
-          setPerusahaan(res.data);
-        } else if (Array.isArray(res.data.data)) {
-          setPerusahaan(res.data.data);
-        } else {
-          console.error("Data perusahaan bukan array:", res.data);
-        }
-      } catch (error) {
-        console.error("Gagal mengambil data perusahaan:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
+  // Hapus
   const handleDelete = (id: number) => {
     Swal.fire({
       title: "Hapus perusahaan?",
@@ -97,7 +127,7 @@ export default function DashboardPerusahaan() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axiosInstance.delete(`/perusahaan/${id}`);
+          await axiosInstance.delete(`/perusahaan/delete/${id}`);
           setPerusahaan((prev) => prev.filter((p) => p.id !== id));
           Swal.fire("Berhasil!", "Data perusahaan dihapus.", "success");
         } catch (error) {
@@ -106,25 +136,21 @@ export default function DashboardPerusahaan() {
       }
     });
   };
+
   const formFields = [
     { label: "Nama", name: "nama", placeholder: "Masukkan nama" },
     { label: "Email", name: "email", type: "email", placeholder: "Masukkan email" },
   ];
-  
-  const handleSubmit = (data: FormData) => {
-    console.log(data.get("nama"), data.get("email"));
-  };
 
   return (
     <TooltipProvider>
       <div className="p-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <BtnTambahPengguna formFields={formFields} onSubmit={handleSubmit} />
-          <ImportButtonExcel onUpload={handleUpload} />
+            <BtnTambahPengguna formFields={formFields} onSubmit={handleSubmit} />
+            <ImportButtonExcel onUpload={handleUpload} />
             <ExportButtonExcel onClick={handleExportExcel} />
           </div>
-
           <div className="w-full md:w-1/3 md:text-right">
             <SearchInput />
           </div>
