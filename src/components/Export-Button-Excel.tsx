@@ -1,4 +1,3 @@
-// components/ExportButtonExcel.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ export default function ExportButtonExcel({ onClick }: ExportButtonExcelProps) {
       onClick={onClick}
       className="flex items-center gap-2"
     >
-      {/* Ikon SVG Excel */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className="w-4 h-4"

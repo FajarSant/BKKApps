@@ -24,7 +24,7 @@ import {
 import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { FaPlus } from "react-icons/fa";
 import Swal from "sweetalert2";
-import axiosInstance from "@/lib/axios"; // Pastikan path sesuai struktur proyekmu
+import axiosInstance from "@/lib/axios";
 
 interface Pengguna {
   id: number;
@@ -42,6 +42,7 @@ interface Pengguna {
 export default function DashboardPengguna() {
   const [data, setData] = useState<Pengguna[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fungsi ambil data
   const fetchData = async () => {
@@ -70,13 +71,12 @@ export default function DashboardPengguna() {
       });
 
       Swal.fire("Berhasil!", "Data pengguna berhasil diimpor.", "success");
-      fetchData(); // Refresh data setelah import
+      fetchData();
     } catch (error) {
       Swal.fire("Gagal!", "Gagal mengimpor data.", "error");
     }
   };
 
-  // Fungsi export
   const handleExportExcel = async () => {
     try {
       const response = await axiosInstance.get("/pengguna/export", {
@@ -96,7 +96,6 @@ export default function DashboardPengguna() {
     }
   };
 
-  // Fungsi hapus
   const handleDelete = async (id: number) => {
     Swal.fire({
       title: "Apakah kamu yakin?",
@@ -111,7 +110,7 @@ export default function DashboardPengguna() {
         try {
           await axiosInstance.delete(`/pengguna/delete/${id}`);
           Swal.fire("Dihapus!", "Pengguna telah dihapus.", "success");
-          fetchData(); // Refresh data setelah hapus
+          fetchData();
         } catch (error) {
           Swal.fire("Gagal!", "Gagal menghapus pengguna.", "error");
         }
@@ -119,7 +118,6 @@ export default function DashboardPengguna() {
     });
   };
 
-  // Fungsi tambah (dummy contoh)
   const handleAdd = async () => {
     try {
       await axiosInstance.post("/pengguna/create", {
@@ -130,13 +128,12 @@ export default function DashboardPengguna() {
       });
 
       Swal.fire("Berhasil!", "Pengguna baru ditambahkan.", "success");
-      fetchData(); // Refresh data setelah tambah
+      fetchData();
     } catch (error) {
       Swal.fire("Gagal!", "Gagal menambahkan pengguna.", "error");
     }
   };
 
-  // Fungsi edit (dummy contoh)
   const handleEdit = async (id: number) => {
     try {
       await axiosInstance.put(`/pengguna/update/${id}`, {
@@ -144,10 +141,23 @@ export default function DashboardPengguna() {
       });
 
       Swal.fire("Berhasil!", "Data pengguna berhasil diedit.", "success");
-      fetchData(); // Refresh data setelah edit
+      fetchData();
     } catch (error) {
       Swal.fire("Gagal!", "Gagal mengedit data pengguna.", "error");
     }
+  };
+  const highlightText = (text: string, highlight: string) => {
+    if (!highlight) return text;
+    const parts = text.split(new RegExp(`(${highlight})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === highlight.toLowerCase() ? (
+        <span key={i} className="bg-yellow-200 font-semibold">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
   };
 
   return (
@@ -163,7 +173,7 @@ export default function DashboardPengguna() {
           </div>
 
           <div className="w-full md:w-1/3 md:text-right">
-            <SearchInput />
+            <SearchInput value={searchTerm} onChange={setSearchTerm} />
           </div>
         </div>
 
@@ -186,50 +196,56 @@ export default function DashboardPengguna() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((pengguna) => (
-                <TableRow key={pengguna.id}>
-                  <TableCell className="font-medium">{pengguna.nama}</TableCell>
-                  <TableCell>{pengguna.email}</TableCell>
-                  <TableCell>{pengguna.peran}</TableCell>
-                  <TableCell>{pengguna.nisn}</TableCell>
-                  <TableCell>{pengguna.jenisKelamin || "-"}</TableCell>
-                  <TableCell>{pengguna.telepon || "-"}</TableCell>
-                  <TableCell>
-                    {pengguna.tanggalLahir
-                      ? new Date(pengguna.tanggalLahir).toLocaleDateString()
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(pengguna.dibuatPada).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(pengguna.id)}
-                        >
-                          <AiOutlineEdit className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Edit</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(pengguna.id)}
-                        >
-                          <AiOutlineDelete className="h-5 w-5 text-red-500" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Hapus</TooltipContent>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {data
+                .filter((pengguna) =>
+                  pengguna.nama.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map((pengguna) => (
+                  <TableRow key={pengguna.id}>
+                    <TableCell className="font-medium">
+                      {highlightText(pengguna.nama, searchTerm)}
+                    </TableCell>
+                    <TableCell>{pengguna.email}</TableCell>
+                    <TableCell>{pengguna.peran}</TableCell>
+                    <TableCell>{pengguna.nisn}</TableCell>
+                    <TableCell>{pengguna.jenisKelamin || "-"}</TableCell>
+                    <TableCell>{pengguna.telepon || "-"}</TableCell>
+                    <TableCell>
+                      {pengguna.tanggalLahir
+                        ? new Date(pengguna.tanggalLahir).toLocaleDateString()
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(pengguna.dibuatPada).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(pengguna.id)}
+                          >
+                            <AiOutlineEdit className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(pengguna.id)}
+                          >
+                            <AiOutlineDelete className="h-5 w-5 text-red-500" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Hapus</TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         )}

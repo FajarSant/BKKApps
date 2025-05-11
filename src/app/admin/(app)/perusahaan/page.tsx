@@ -38,8 +38,8 @@ interface Perusahaan {
 
 export default function DashboardPerusahaan() {
   const [perusahaan, setPerusahaan] = useState<Perusahaan[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -57,7 +57,6 @@ export default function DashboardPerusahaan() {
     fetchData();
   }, []);
 
-  // Tambah Data
   const handleSubmit = async (formData: FormData) => {
     try {
       const data = {
@@ -75,7 +74,6 @@ export default function DashboardPerusahaan() {
     }
   };
 
-  // Import
   const handleUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -95,7 +93,6 @@ export default function DashboardPerusahaan() {
     }
   };
 
-  // Export
   const handleExportExcel = async () => {
     try {
       const response = await axiosInstance.get("/perusahaan/export", {
@@ -105,7 +102,7 @@ export default function DashboardPerusahaan() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "data-export.xlsx");
+      link.setAttribute("download", "Data-Perusahaan.xlsx");
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -115,7 +112,6 @@ export default function DashboardPerusahaan() {
     }
   };
 
-  // Hapus
   const handleDelete = (id: number) => {
     Swal.fire({
       title: "Hapus perusahaan?",
@@ -136,10 +132,28 @@ export default function DashboardPerusahaan() {
       }
     });
   };
+  const highlightText = (text: string, highlight: string) => {
+    if (!highlight) return text;
+    const parts = text.split(new RegExp(`(${highlight})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === highlight.toLowerCase() ? (
+        <span key={i} className="bg-yellow-200 font-semibold">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
 
   const formFields = [
     { label: "Nama", name: "nama", placeholder: "Masukkan nama" },
-    { label: "Email", name: "email", type: "email", placeholder: "Masukkan email" },
+    {
+      label: "Email",
+      name: "email",
+      type: "email",
+      placeholder: "Masukkan email",
+    },
   ];
 
   return (
@@ -147,12 +161,15 @@ export default function DashboardPerusahaan() {
       <div className="p-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <BtnTambahPengguna formFields={formFields} onSubmit={handleSubmit} />
+            <BtnTambahPengguna
+              formFields={formFields}
+              onSubmit={handleSubmit}
+            />
             <ImportButtonExcel onUpload={handleUpload} />
             <ExportButtonExcel onClick={handleExportExcel} />
           </div>
           <div className="w-full md:w-1/3 md:text-right">
-            <SearchInput />
+            <SearchInput value={searchTerm} onChange={setSearchTerm} />
           </div>
         </div>
 
@@ -169,51 +186,57 @@ export default function DashboardPerusahaan() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {perusahaan.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.nama}</TableCell>
-                <TableCell>{p.email}</TableCell>
-                <TableCell>{p.telepon ?? "-"}</TableCell>
-                <TableCell>{p.alamat}</TableCell>
-                <TableCell>
-                  {p.deskripsi
-                    ? p.deskripsi.length > 50
-                      ? p.deskripsi.substring(0, 50) + "..."
-                      : p.deskripsi
-                    : "-"}
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <AiOutlineEye className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Lihat</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <AiOutlineEdit className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(p.id)}
-                      >
-                        <AiOutlineDelete className="h-5 w-5 text-red-500" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Hapus</TooltipContent>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
+            {perusahaan
+              .filter((p) =>
+                p.nama.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium">
+                    {highlightText(p.nama, searchTerm)}
+                  </TableCell>
+                  <TableCell>{p.email}</TableCell>
+                  <TableCell>{p.telepon ?? "-"}</TableCell>
+                  <TableCell>{p.alamat}</TableCell>
+                  <TableCell>
+                    {p.deskripsi
+                      ? p.deskripsi.length > 50
+                        ? p.deskripsi.substring(0, 50) + "..."
+                        : p.deskripsi
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <AiOutlineEye className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Lihat</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <AiOutlineEdit className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(p.id)}
+                        >
+                          <AiOutlineDelete className="h-5 w-5 text-red-500" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Hapus</TooltipContent>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </div>

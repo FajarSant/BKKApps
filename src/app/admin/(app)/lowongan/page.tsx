@@ -26,7 +26,6 @@ import { FaPlus } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useEffect, useState } from "react";
 
-// Define the types based on the API response structure
 interface Lowongan {
   id: number;
   nama: string;
@@ -46,8 +45,8 @@ interface Lowongan {
 export default function DashboardLowongan() {
   const [lowonganData, setLowonganData] = useState<Lowongan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch data from the API
   useEffect(() => {
     const fetchLowongan = async () => {
       try {
@@ -65,7 +64,6 @@ export default function DashboardLowongan() {
     fetchLowongan();
   }, []);
 
-  // Handle file upload (Import)
   const handleUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -74,15 +72,12 @@ export default function DashboardLowongan() {
       await axiosInstance.post("/lowongan/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      // After successful import, refetch or update the state accordingly
       const response = await axiosInstance.get("/lowongan/getall");
       setLowonganData(response.data?.data || []);
     } catch (error) {
       console.error("Gagal mengimpor data:", error);
     }
   };
-
-  // Handle exporting to Excel
   const handleExportExcel = async () => {
     try {
       const response = await axiosInstance.get("/lowongan/export", {
@@ -102,7 +97,6 @@ export default function DashboardLowongan() {
     }
   };
 
-  // Handle delete confirmation
   const handleDelete = (id: number) => {
     Swal.fire({
       title: "Apakah kamu yakin?",
@@ -118,7 +112,6 @@ export default function DashboardLowongan() {
           const response = await axiosInstance.delete(`/lowongan/delete/${id}`);
           if (response.status === 200) {
             Swal.fire("Dihapus!", "Lowongan telah dihapus.", "success");
-            // Remove the deleted lowongan from the state
             setLowonganData((prevData) =>
               prevData.filter((lowongan) => lowongan.id !== id)
             );
@@ -126,19 +119,35 @@ export default function DashboardLowongan() {
             Swal.fire("Gagal!", "Gagal menghapus lowongan.", "error");
           }
         } catch (error) {
-          Swal.fire("Gagal!", "Terjadi kesalahan saat menghapus lowongan.", "error");
+          Swal.fire(
+            "Gagal!",
+            "Terjadi kesalahan saat menghapus lowongan.",
+            "error"
+          );
           console.error("Error deleting lowongan:", error);
         }
       }
     });
   };
 
-  // Handle Edit (e.g., after saving changes)
   const handleEdit = (updatedLowongan: Lowongan) => {
-    // Update the edited lowongan in the state
     setLowonganData((prevData) =>
       prevData.map((lowongan) =>
         lowongan.id === updatedLowongan.id ? updatedLowongan : lowongan
+      )
+    );
+  };
+
+  const highlightText = (text: string, highlight: string) => {
+    if (!highlight) return text;
+    const parts = text.split(new RegExp(`(${highlight})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === highlight.toLowerCase() ? (
+        <span key={i} className="bg-yellow-200 font-semibold">
+          {part}
+        </span>
+      ) : (
+        part
       )
     );
   };
@@ -158,7 +167,7 @@ export default function DashboardLowongan() {
 
           {/* Search di kanan */}
           <div className="w-full md:w-1/3 md:text-right">
-            <SearchInput />
+            <SearchInput value={searchTerm} onChange={setSearchTerm} />
           </div>
         </div>
 
@@ -166,7 +175,9 @@ export default function DashboardLowongan() {
           <div>Loading...</div>
         ) : (
           <Table>
-            <TableCaption>Daftar lowongan pekerjaan yang tersedia.</TableCaption>
+            <TableCaption>
+              Daftar lowongan pekerjaan yang tersedia.
+            </TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Nama</TableHead>
@@ -180,53 +191,59 @@ export default function DashboardLowongan() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {lowonganData.map((lowongan) => (
-                <TableRow key={lowongan.id}>
-                  <TableCell className="font-medium">{lowongan.nama}</TableCell>
-                  <TableCell>{lowongan.ketentuan}</TableCell>
-                  <TableCell>{lowongan.persyaratan}</TableCell>
-                  <TableCell>{lowongan.jenisPekerjaan}</TableCell>
-                  <TableCell>{lowongan.perusahaan.nama}</TableCell>
-                  <TableCell>
-                    {new Date(lowongan.dibuatPada).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {lowongan.expiredAt
-                      ? new Date(lowongan.expiredAt).toLocaleDateString()
-                      : "-"}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <AiOutlineEye className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Lihat</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <AiOutlineEdit className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Edit</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(lowongan.id)}
-                        >
-                          <AiOutlineDelete className="h-5 w-5 text-red-500" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Hapus</TooltipContent>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {lowonganData
+                .filter((lowongan) =>
+                  lowongan.nama.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map((lowongan) => (
+                  <TableRow key={lowongan.id}>
+                    <TableCell className="font-medium">
+                      {highlightText(lowongan.nama, searchTerm)}
+                    </TableCell>
+                    <TableCell>{lowongan.ketentuan}</TableCell>
+                    <TableCell>{lowongan.persyaratan}</TableCell>
+                    <TableCell>{lowongan.jenisPekerjaan}</TableCell>
+                    <TableCell>{lowongan.perusahaan.nama}</TableCell>
+                    <TableCell>
+                      {new Date(lowongan.dibuatPada).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {lowongan.expiredAt
+                        ? new Date(lowongan.expiredAt).toLocaleDateString()
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <AiOutlineEye className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Lihat</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <AiOutlineEdit className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(lowongan.id)}
+                          >
+                            <AiOutlineDelete className="h-5 w-5 text-red-500" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Hapus</TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         )}

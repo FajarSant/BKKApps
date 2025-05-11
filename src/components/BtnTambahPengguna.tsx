@@ -11,7 +11,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "./ui/button";
 
-// Tipe untuk satu field form
 type FormField = {
   label: string;
   name: string;
@@ -19,7 +18,6 @@ type FormField = {
   placeholder?: string;
 };
 
-// Tipe props untuk komponen
 interface BtnTambahPenggunaProps {
   formFields: FormField[];
   onSubmit: (data: FormData) => void;

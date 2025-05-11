@@ -22,7 +22,7 @@ export default function ImportButtonExcel({ onUpload }: ImportButtonExcelProps) 
 
     try {
       setUploading(true);
-      await onUpload(file); // handler dari luar
+      await onUpload(file);
       await showSuccess("File berhasil diunggah.");
       setOpen(false);
     } catch (err) {
@@ -37,7 +37,6 @@ export default function ImportButtonExcel({ onUpload }: ImportButtonExcelProps) 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="excel" size="sm" className="flex items-center gap-2">
-          {/* SVG icon kamu */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="w-4 h-4"
