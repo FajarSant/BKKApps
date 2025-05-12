@@ -18,13 +18,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
 import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import Swal from "sweetalert2";
 import ImportButtonExcel from "@/components/Import-Button-Excel";
 import ExportButtonExcel from "@/components/Export-Button-Excel";
 import SearchInput from "@/components/SearchInput";
 import BtnTambahPengguna from "@/components/BtnTambahPengguna";
+import EditButton from "@/components/Edit-Button";
 
 interface Perusahaan {
   id: number;
@@ -59,20 +59,31 @@ export default function DashboardPerusahaan() {
 
   const handleSubmit = async (formData: FormData) => {
     try {
+      // Mengambil data form dan menangani field opsional
       const data = {
-        nama: formData.get("nama"),
-        email: formData.get("email"),
+        nama: formData.get("nama") as string,
+        email: formData.get("email") as string,
+        telepon: formData.get("telepon") ? (formData.get("telepon") as string) : "",
+        alamat: formData.get("alamat") as string,
+        deskripsi: formData.get("deskripsi") ? (formData.get("deskripsi") as string) : "",
+        gambar: formData.get("gambar") ? (formData.get("gambar") as string) : "",
       };
-
+  
+      // Mengirim request POST dengan data
       const response = await axiosInstance.post("/perusahaan/create", data);
-      setPerusahaan((prev) => [...prev, response.data]);
-
+  
+      // Pastikan response.data berisi data perusahaan yang baru
+      const newPerusahaan = response.data;
+  
+      // Tampilkan notifikasi berhasil
       Swal.fire("Berhasil", "Perusahaan berhasil ditambahkan.", "success");
     } catch (error) {
       console.error("Tambah perusahaan error:", error);
       Swal.fire("Gagal", "Tidak dapat menambah data.", "error");
     }
   };
+  
+  
 
   const handleUpload = async (file: File) => {
     const formData = new FormData();
@@ -112,6 +123,29 @@ export default function DashboardPerusahaan() {
     }
   };
 
+  const handleEdit = async (id: number, formData: FormData) => {
+    try {
+      const data = {
+        nama: formData.get("nama") as string,
+        email: formData.get("email") as string,
+        telepon: formData.get("telepon") as string,
+        alamat: formData.get("alamat") as string,
+        deskripsi: formData.get("deskripsi") as string,
+      };
+
+      await axiosInstance.put(`/perusahaan/update/${id}`, data);
+
+      setPerusahaan((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...data } : item))
+      );
+
+      Swal.fire("Berhasil", "Data perusahaan berhasil diperbarui.", "success");
+    } catch (error) {
+      console.error("Update perusahaan error:", error);
+      Swal.fire("Gagal", "Tidak dapat memperbarui data.", "error");
+    }
+  };
+
   const handleDelete = (id: number) => {
     Swal.fire({
       title: "Hapus perusahaan?",
@@ -124,7 +158,7 @@ export default function DashboardPerusahaan() {
       if (result.isConfirmed) {
         try {
           await axiosInstance.delete(`/perusahaan/delete/${id}`);
-          setPerusahaan((prev) => prev.filter((p) => p.id !== id));
+          setPerusahaan((prev) => prev.filter((p) => p.id !== id)); // Remove from state
           Swal.fire("Berhasil!", "Data perusahaan dihapus.", "success");
         } catch (error) {
           Swal.fire("Gagal", "Tidak dapat menghapus data.", "error");
@@ -132,16 +166,17 @@ export default function DashboardPerusahaan() {
       }
     });
   };
+
   const highlightText = (text: string, highlight: string) => {
     if (!highlight) return text;
     const parts = text.split(new RegExp(`(${highlight})`, "gi"));
     return parts.map((part, i) =>
       part.toLowerCase() === highlight.toLowerCase() ? (
-        <span key={i} className="bg-yellow-200 font-semibold">
+        <span key={`highlight-${i}`} className="bg-yellow-200 font-semibold">
           {part}
         </span>
       ) : (
-        part
+        <span key={`normal-${i}`}>{part}</span>
       )
     );
   };
@@ -153,6 +188,21 @@ export default function DashboardPerusahaan() {
       name: "email",
       type: "email",
       placeholder: "Masukkan email",
+    },
+    {
+      label: "Telepon",
+      name: "telepon",
+      placeholder: "Masukkan nomor telepon",
+    },
+    {
+      label: "Alamat",
+      name: "alamat",
+      placeholder: "Masukkan alamat",
+    },
+    {
+      label: "Deskripsi",
+      name: "deskripsi",
+      placeholder: "Masukkan deskripsi",
     },
   ];
 
@@ -187,11 +237,11 @@ export default function DashboardPerusahaan() {
           </TableHeader>
           <TableBody>
             {perusahaan
-              .filter((p) =>
-                p.nama.toLowerCase().includes(searchTerm.toLowerCase())
-              )
+               .filter((p) => p.nama.toLowerCase().includes(searchTerm.toLowerCase())) // Error might be here
+
               .map((p) => (
                 <TableRow key={p.id}>
+                  <TableCell>{p.id}</TableCell>
                   <TableCell className="font-medium">
                     {highlightText(p.nama, searchTerm)}
                   </TableCell>
@@ -206,7 +256,7 @@ export default function DashboardPerusahaan() {
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Tooltip>
+                    <Tooltip key={`view-tooltip-${p.id}`}>
                       <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon">
                           <AiOutlineEye className="h-5 w-5" />
@@ -214,15 +264,15 @@ export default function DashboardPerusahaan() {
                       </TooltipTrigger>
                       <TooltipContent>Lihat</TooltipContent>
                     </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <AiOutlineEdit className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Edit</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
+
+                    <EditButton
+                      key={`edit-button-${p.id}`}
+                      formFields={formFields}
+                      onSubmit={handleEdit}
+                      editData={p}
+                    />
+
+                    <Tooltip key={`delete-tooltip-${p.id}`}>
                       <TooltipTrigger asChild>
                         <Button
                           variant="ghost"
