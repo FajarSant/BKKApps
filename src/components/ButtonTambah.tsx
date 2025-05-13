@@ -9,43 +9,51 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
 type FormField = {
   label: string;
   name: string;
   type?: string;
   placeholder?: string;
-  required?: boolean; // Add required field to FormField type
+  required?: boolean;
+  options?: { value: string; label: string }[]; // Add options for select type
 };
 
-interface BtnTambahPenggunaProps {
+interface ButtonTambahProps {
   formFields: FormField[];
   onSubmit: (data: FormData) => void;
   buttonText?: string;
 }
 
-const BtnTambahPengguna: React.FC<BtnTambahPenggunaProps> = ({
+const ButtonTambah: React.FC<ButtonTambahProps> = ({
   formFields,
   onSubmit,
   buttonText = "Tambah Pengguna",
 }) => {
   const [open, setOpen] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [formData, setFormData] = useState<Map<string, string>>(new Map());
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
-    // Reset errors and form fields when closing modal
     setErrors({});
     setOpen(false);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevFormData) => {
+      const newFormData = new Map(prevFormData);
+      newFormData.set(name, value);
+      return newFormData;
+    });
+  };
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
     let formErrors: { [key: string]: string } = {};
 
-    // Validate each form field
     formFields.forEach((field) => {
       const fieldValue = formData.get(field.name);
       if (field.required && !fieldValue) {
@@ -53,16 +61,17 @@ const BtnTambahPengguna: React.FC<BtnTambahPenggunaProps> = ({
       }
     });
 
-    // If there are errors, set them and don't submit
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       return;
     }
 
-    // If no errors, call onSubmit function to process the form data
-    onSubmit(formData);
+    const formDataToSubmit = new FormData();
+    formData.forEach((value, key) => {
+      formDataToSubmit.append(key, value);
+    });
 
-    // Close the modal after form submission and reset errors
+    onSubmit(formDataToSubmit);
     handleClose();
   };
 
@@ -75,28 +84,50 @@ const BtnTambahPengguna: React.FC<BtnTambahPenggunaProps> = ({
           </Button>
         </DialogTrigger>
 
-        <DialogContent>
+        <DialogContent className="max-h-[500px] overflow-y-auto">
           <DialogTitle>{buttonText}</DialogTitle>
           <DialogDescription>
             Silakan masukkan detail pengguna baru di bawah ini.
           </DialogDescription>
 
           <form onSubmit={handleSubmit}>
-            {formFields.map((field, index: number) => (
+            {formFields.map((field, index) => (
               <div key={index} className="mb-4">
                 <label className="block">{field.label}</label>
-                <Input
-                  type={field.type || "text"}
-                  name={field.name}
-                  placeholder={field.placeholder}
-                  className="mt-2 p-2 border rounded-md"
-                />
-                {/* Show error message if there's an error for this field */}
+
+                {field.type === "select" ? (
+                  <select
+                    name={field.name}
+                    value={formData.get(field.name) || ""}
+                    onChange={handleInputChange}
+                    className="mt-2 p-2 border rounded-md w-full"
+                  >
+                    <option value="">Pilih {field.label}</option>
+                    {field.options?.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.value} - {option.label} {/* Show both ID and company name */}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    type={field.type || "text"}
+                    name={field.name}
+                    placeholder={field.placeholder}
+                    className="mt-2 p-2 border rounded-md"
+                    value={formData.get(field.name) || ""}
+                    onChange={handleInputChange}
+                  />
+                )}
+
                 {errors[field.name] && (
-                  <div className="text-red-600 text-sm mt-1">{errors[field.name]}</div>
+                  <div className="text-red-600 text-sm mt-1">
+                    {errors[field.name]}
+                  </div>
                 )}
               </div>
             ))}
+
             <div className="mt-4 flex justify-end">
               <Button type="submit" variant="default">
                 {buttonText}
@@ -109,4 +140,4 @@ const BtnTambahPengguna: React.FC<BtnTambahPenggunaProps> = ({
   );
 };
 
-export default BtnTambahPengguna;
+export default ButtonTambah;

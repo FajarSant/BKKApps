@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState } from "react";
 import { AiOutlineEdit } from "react-icons/ai";
 import {
   Dialog,
@@ -12,34 +10,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"; // Import select component
+import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
 
-interface Perusahaan {
-  id: number;
-  nama: string;
-  email: string;
-  gambar?: string;
-  telepon?: string;
-  alamat: string;
-  deskripsi?: string;
-}
-
-type FormField = {
-  label: string;
-  name: string;
-  type?: string;
-  placeholder?: string;
-};
-
 interface EditButtonProps {
-  formFields: FormField[];
+  formFields: {
+    label: string;
+    name: string;
+    type?: string;
+    placeholder?: string;
+    options?: { value: string; label: string }[]; // Dropdown options
+  }[];
   onSubmit: (id: number, data: FormData) => void;
   buttonText?: string;
-  editData: Perusahaan;
+  editData: { id: number; [key: string]: any }; // Tipe editData bisa disesuaikan
 }
 
 const EditButton: React.FC<EditButtonProps> = ({
@@ -49,36 +42,12 @@ const EditButton: React.FC<EditButtonProps> = ({
   editData,
 }) => {
   const [open, setOpen] = useState(false);
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (editData) {
-      setFormValues({
-        nama: editData.nama ?? "",
-        email: editData.email ?? "",
-        telepon: editData.telepon ?? "",
-        alamat: editData.alamat ?? "",
-        deskripsi: editData.deskripsi ?? "",
-      });
-    }
-  }, [editData]);
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData();
-    Object.entries(formValues).forEach(([key, value]) =>
-      formData.append(key, value)
-    );
-    onSubmit(editData.id, formData);
-    setOpen(false);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const formData = new FormData(e.target as HTMLFormElement);
+    onSubmit(editData.id, formData); // Only send the id in formData
+    setOpen(false); // Close modal after submit
   };
 
   return (
@@ -86,7 +55,7 @@ const EditButton: React.FC<EditButtonProps> = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <Tooltip>
           <TooltipTrigger asChild>
-            {/* ⛔ Jangan letakkan DialogTrigger di dalam TooltipTrigger */}
+            {/* Trigger button for opening the modal */}
             <Button
               variant="ghost"
               size="icon"
@@ -99,27 +68,51 @@ const EditButton: React.FC<EditButtonProps> = ({
           <TooltipContent>Edit</TooltipContent>
         </Tooltip>
 
-        <DialogContent>
+        <DialogContent className="max-h-[500px] overflow-y-auto">
           <DialogTitle>{buttonText}</DialogTitle>
           <DialogDescription>
             Silakan edit detail yang diperlukan.
           </DialogDescription>
 
+          {/* Form controlled by parent */}
           <form onSubmit={handleSubmit}>
             {formFields.map((field) => (
               <div key={field.name} className="mb-4">
                 <label className="block font-medium text-sm">
                   {field.label}
                 </label>
-                <Input
-                  type={field.type || "text"}
-                  name={field.name}
-                  value={formValues[field.name] || ""}
-                  placeholder={field.placeholder}
-                  onChange={handleChange}
-                  className="mt-2"
-                  required
-                />
+
+                {/* Check if field has dropdown options */}
+                {field.type === "select" ? (
+                  <Select
+                    name={field.name}
+                    defaultValue={editData[field.name]?.toString()}
+                  >
+                    <SelectTrigger className="w-full p-2 bg-white border border-gray-300 rounded-md">
+                      <span>{editData[field.name] || field.placeholder}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          value={option.value}
+                          className="p-2 hover:bg-gray-200"
+                        >
+                          {/* Display both id and namaperusahaan */}
+                          {`${option.value} - ${option.label}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    type={field.type || "text"}
+                    name={field.name}
+                    defaultValue={editData[field.name] || ""}
+                    placeholder={field.placeholder}
+                    className="mt-2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 w-full"
+                  />
+                )}
               </div>
             ))}
 
