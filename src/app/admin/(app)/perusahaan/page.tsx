@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axiosInstance from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,72 +39,106 @@ interface Perusahaan {
 export default function DashboardPerusahaan() {
   const [perusahaan, setPerusahaan] = useState<Perusahaan[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch data perusahaan
+  const fetchData = useCallback(async () => {
+    if (isLoading) return; // Menghindari multiple requests
+    setIsLoading(true);
+    try {
+      const res = await axiosInstance.get("/perusahaan/getall");
+      const data = Array.isArray(res.data) ? res.data : res.data.data;
+
+      if (Array.isArray(data)) {
+        const sortedData = data.sort((a, b) => a.nama.localeCompare(b.nama));
+        setPerusahaan(sortedData);
+      } else {
+        throw new Error("Format data tidak valid.");
+      }
+    } catch (error) {
+      console.error("Gagal mengambil data perusahaan:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axiosInstance.get("/perusahaan/getall");
-        const data = Array.isArray(res.data) ? res.data : res.data.data;
-        if (Array.isArray(data)) {
-          setPerusahaan(data);
-        } else {
-          throw new Error("Format data tidak valid.");
-        }
-      } catch (error) {
-        console.error("Gagal mengambil data perusahaan:", error);
-      }
-    };
     fetchData();
-  }, []);
+  }, [fetchData]);
 
-  const handleSubmit = async (formData: FormData) => {
+  // Menambah data perusahaan baru
+  const handleAdd = async (formData: FormData) => {
+    const nama = formData.get("nama") as string;
+    const email = formData.get("email") as string;
+    const alamat = formData.get("alamat") as string;
+    const gambar = formData.get("gambar") as string;
+
+    // Validasi form
+    if (!nama || !email || !alamat || !gambar) {
+      Swal.fire(
+        "Gagal",
+        "Nama, Email, dan Alamat, Gambar harus diisi.",
+        "error"
+      );
+      return;
+    }
+
+    // Validasi format email
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      Swal.fire("Gagal", "Format email tidak valid.", "error");
+      return;
+    }
+
+    const data = {
+      nama,
+      email,
+      gambar: formData.get("gambar") || "",
+      telepon: formData.get("telepon") ? formData.get("telepon") : "",
+      alamat,
+      deskripsi: formData.get("deskripsi") || "",
+    };
+
     try {
-      // Mengambil data form dan menangani field opsional
-      const data = {
-        nama: formData.get("nama") as string,
-        email: formData.get("email") as string,
-        telepon: formData.get("telepon") ? (formData.get("telepon") as string) : "",
-        alamat: formData.get("alamat") as string,
-        deskripsi: formData.get("deskripsi") ? (formData.get("deskripsi") as string) : "",
-        gambar: formData.get("gambar") ? (formData.get("gambar") as string) : "",
-      };
-  
-      // Mengirim request POST dengan data
       const response = await axiosInstance.post("/perusahaan/create", data);
-  
-      // Pastikan response.data berisi data perusahaan yang baru
-      const newPerusahaan = response.data;
-  
-      // Tampilkan notifikasi berhasil
-      Swal.fire("Berhasil", "Perusahaan berhasil ditambahkan.", "success");
+      if (response.data) {
+        await fetchData(); // Memanggil fetchData untuk mengupdate data dari server
+        Swal.fire("Berhasil", "Perusahaan berhasil ditambahkan.", "success");
+      } else {
+        throw new Error("Data yang diterima tidak valid.");
+      }
     } catch (error) {
       console.error("Tambah perusahaan error:", error);
-      Swal.fire("Gagal", "Tidak dapat menambah data.", "error");
+      Swal.fire(
+        "Gagal",
+        "Tidak dapat menambah data perusahaan. Coba lagi.",
+        "error"
+      );
     }
   };
-  
-  
 
-  const handleUpload = async (file: File) => {
+  // Mengimpor data perusahaan dari file
+  const handleImport = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
+
+    setIsLoading(true); // Set loading state
     try {
       await axiosInstance.post("/perusahaan/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      const res = await axiosInstance.get("/perusahaan/getall");
-      const data = Array.isArray(res.data) ? res.data : res.data.data;
-      setPerusahaan(data);
-
+      await fetchData(); // Fetch data setelah import
       Swal.fire("Berhasil", "Data berhasil diimpor.", "success");
     } catch (error) {
       console.error("Import perusahaan error:", error);
       Swal.fire("Gagal", "Import data gagal.", "error");
+    } finally {
+      setIsLoading(false); // Set loading false setelah selesai
     }
   };
 
+  // Mengekspor data perusahaan ke file Excel
   const handleExportExcel = async () => {
+    setIsLoading(true);
     try {
       const response = await axiosInstance.get("/perusahaan/export", {
         responseType: "blob",
@@ -118,21 +152,28 @@ export default function DashboardPerusahaan() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+
+      Swal.fire("Berhasil", "Data berhasil diekspor.", "success");
     } catch (error) {
       console.error("Export gagal:", error);
+      Swal.fire("Gagal", "Gagal mengekspor data.", "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Mengedit data perusahaan
   const handleEdit = async (id: number, formData: FormData) => {
-    try {
-      const data = {
-        nama: formData.get("nama") as string,
-        email: formData.get("email") as string,
-        telepon: formData.get("telepon") as string,
-        alamat: formData.get("alamat") as string,
-        deskripsi: formData.get("deskripsi") as string,
-      };
+    const data = {
+      nama: formData.get("nama") as string,
+      email: formData.get("email") as string,
+      gambar: formData.get("gambar") as string,
+      telepon: formData.get("telepon") as string,
+      alamat: formData.get("alamat") as string,
+      deskripsi: formData.get("deskripsi") as string,
+    };
 
+    try {
       await axiosInstance.put(`/perusahaan/update/${id}`, data);
 
       setPerusahaan((prev) =>
@@ -146,6 +187,7 @@ export default function DashboardPerusahaan() {
     }
   };
 
+  // Menghapus data perusahaan
   const handleDelete = (id: number) => {
     Swal.fire({
       title: "Hapus perusahaan?",
@@ -158,7 +200,7 @@ export default function DashboardPerusahaan() {
       if (result.isConfirmed) {
         try {
           await axiosInstance.delete(`/perusahaan/delete/${id}`);
-          setPerusahaan((prev) => prev.filter((p) => p.id !== id)); // Remove from state
+          setPerusahaan((prev) => prev.filter((p) => p.id !== id)); // Menghapus perusahaan dari state
           Swal.fire("Berhasil!", "Data perusahaan dihapus.", "success");
         } catch (error) {
           Swal.fire("Gagal", "Tidak dapat menghapus data.", "error");
@@ -167,8 +209,9 @@ export default function DashboardPerusahaan() {
     });
   };
 
-  const highlightText = (text: string, highlight: string) => {
-    if (!highlight) return text;
+  // Menyoroti teks pada pencarian
+  const highlightText = useCallback((text: string, highlight: string) => {
+    if (!text || !highlight) return text;
     const parts = text.split(new RegExp(`(${highlight})`, "gi"));
     return parts.map((part, i) =>
       part.toLowerCase() === highlight.toLowerCase() ? (
@@ -179,7 +222,7 @@ export default function DashboardPerusahaan() {
         <span key={`normal-${i}`}>{part}</span>
       )
     );
-  };
+  }, []);
 
   const formFields = [
     { label: "Nama", name: "nama", placeholder: "Masukkan nama" },
@@ -190,15 +233,17 @@ export default function DashboardPerusahaan() {
       placeholder: "Masukkan email",
     },
     {
+      label: "Gambar",
+      name: "gambar",
+      placeholder: "Masukkan Url Gambar Jika Ada",
+    },
+
+    {
       label: "Telepon",
       name: "telepon",
       placeholder: "Masukkan nomor telepon",
     },
-    {
-      label: "Alamat",
-      name: "alamat",
-      placeholder: "Masukkan alamat",
-    },
+    { label: "Alamat", name: "alamat", placeholder: "Masukkan alamat" },
     {
       label: "Deskripsi",
       name: "deskripsi",
@@ -211,11 +256,8 @@ export default function DashboardPerusahaan() {
       <div className="p-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <BtnTambahPengguna
-              formFields={formFields}
-              onSubmit={handleSubmit}
-            />
-            <ImportButtonExcel onUpload={handleUpload} />
+            <BtnTambahPengguna formFields={formFields} onSubmit={handleAdd} />
+            <ImportButtonExcel onUpload={handleImport} />
             <ExportButtonExcel onClick={handleExportExcel} />
           </div>
           <div className="w-full md:w-1/3 md:text-right">
@@ -229,61 +271,42 @@ export default function DashboardPerusahaan() {
             <TableRow>
               <TableHead>Nama</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Url Gambar</TableHead>
               <TableHead>Telepon</TableHead>
               <TableHead>Alamat</TableHead>
-              <TableHead>Deskripsi</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {perusahaan
-               .filter((p) => p.nama.toLowerCase().includes(searchTerm.toLowerCase())) // Error might be here
-
-              .map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell>{p.id}</TableCell>
-                  <TableCell className="font-medium">
-                    {highlightText(p.nama, searchTerm)}
-                  </TableCell>
-                  <TableCell>{p.email}</TableCell>
-                  <TableCell>{p.telepon ?? "-"}</TableCell>
-                  <TableCell>{p.alamat}</TableCell>
+              .filter((item) =>
+                item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{highlightText(item.nama, searchTerm)}</TableCell>
+                  <TableCell>{item.email}</TableCell>
+                  <TableCell>{item.gambar}</TableCell>
+                  <TableCell>{item.telepon}</TableCell>
+                  <TableCell>{item.alamat}</TableCell>
                   <TableCell>
-                    {p.deskripsi
-                      ? p.deskripsi.length > 50
-                        ? p.deskripsi.substring(0, 50) + "..."
-                        : p.deskripsi
-                      : "-"}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Tooltip key={`view-tooltip-${p.id}`}>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <AiOutlineEye className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Lihat</TooltipContent>
-                    </Tooltip>
-
-                    <EditButton
-                      key={`edit-button-${p.id}`}
-                      formFields={formFields}
-                      onSubmit={handleEdit}
-                      editData={p}
-                    />
-
-                    <Tooltip key={`delete-tooltip-${p.id}`}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(p.id)}
-                        >
-                          <AiOutlineDelete className="h-5 w-5 text-red-500" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Hapus</TooltipContent>
-                    </Tooltip>
+                    <div className="flex items-center gap-2">
+                      <EditButton
+                        key={`edit-button-${item.id}`}
+                        formFields={formFields}
+                        onSubmit={handleEdit}
+                        editData={item}
+                      />
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <AiOutlineDelete
+                            onClick={() => handleDelete(item.id)}
+                            className="cursor-pointer text-red-500"
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>Hapus</TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState, FormEvent } from "react";
 import { FaPlus } from "react-icons/fa";
 import {
@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "./ui/button";
@@ -17,6 +16,7 @@ type FormField = {
   name: string;
   type?: string;
   placeholder?: string;
+  required?: boolean; // Add required field to FormField type
 };
 
 interface BtnTambahPenggunaProps {
@@ -31,14 +31,39 @@ const BtnTambahPengguna: React.FC<BtnTambahPenggunaProps> = ({
   buttonText = "Tambah Pengguna",
 }) => {
   const [open, setOpen] = useState<boolean>(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    // Reset errors and form fields when closing modal
+    setErrors({});
+    setOpen(false);
+  };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    let formErrors: { [key: string]: string } = {};
+
+    // Validate each form field
+    formFields.forEach((field) => {
+      const fieldValue = formData.get(field.name);
+      if (field.required && !fieldValue) {
+        formErrors[field.name] = `${field.label} harus diisi!`;
+      }
+    });
+
+    // If there are errors, set them and don't submit
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
+    // If no errors, call onSubmit function to process the form data
     onSubmit(formData);
+
+    // Close the modal after form submission and reset errors
+    handleClose();
   };
 
   return (
@@ -66,6 +91,10 @@ const BtnTambahPengguna: React.FC<BtnTambahPenggunaProps> = ({
                   placeholder={field.placeholder}
                   className="mt-2 p-2 border rounded-md"
                 />
+                {/* Show error message if there's an error for this field */}
+                {errors[field.name] && (
+                  <div className="text-red-600 text-sm mt-1">{errors[field.name]}</div>
+                )}
               </div>
             ))}
             <div className="mt-4 flex justify-end">
