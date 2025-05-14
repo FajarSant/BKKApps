@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { AiOutlineEdit } from "react-icons/ai";
 import {
@@ -14,7 +16,7 @@ import {
   SelectTrigger,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"; // Import select component
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipTrigger,
@@ -28,11 +30,11 @@ interface EditButtonProps {
     name: string;
     type?: string;
     placeholder?: string;
-    options?: { value: string; label: string }[]; // Dropdown options
+    options?: { value: string; label: string }[];
   }[];
   onSubmit: (id: number, data: FormData) => void;
   buttonText?: string;
-  editData: { id: number; [key: string]: any }; // Tipe editData bisa disesuaikan
+  editData: { id: number; [key: string]: any };
 }
 
 const EditButton: React.FC<EditButtonProps> = ({
@@ -43,11 +45,24 @@ const EditButton: React.FC<EditButtonProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
 
+  const [formValues, setFormValues] = useState<{ [key: string]: string }>(
+    Object.fromEntries(
+      formFields.map((f) => [f.name, editData[f.name]?.toString() || ""])
+    )
+  );
+
+  const handleInputChange = (name: string, value: string) => {
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    onSubmit(editData.id, formData); // Only send the id in formData
-    setOpen(false); // Close modal after submit
+    const formData = new FormData();
+    Object.entries(formValues).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+    onSubmit(editData.id, formData);
+    setOpen(false);
   };
 
   return (
@@ -55,7 +70,6 @@ const EditButton: React.FC<EditButtonProps> = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <Tooltip>
           <TooltipTrigger asChild>
-            {/* Trigger button for opening the modal */}
             <Button
               variant="ghost"
               size="icon"
@@ -74,7 +88,6 @@ const EditButton: React.FC<EditButtonProps> = ({
             Silakan edit detail yang diperlukan.
           </DialogDescription>
 
-          {/* Form controlled by parent */}
           <form onSubmit={handleSubmit}>
             {formFields.map((field) => (
               <div key={field.name} className="mb-4">
@@ -82,24 +95,26 @@ const EditButton: React.FC<EditButtonProps> = ({
                   {field.label}
                 </label>
 
-                {/* Check if field has dropdown options */}
                 {field.type === "select" ? (
                   <Select
-                    name={field.name}
-                    defaultValue={editData[field.name]?.toString()}
+                    value={formValues[field.name] || ""}
+                    onValueChange={(value) =>
+                      handleInputChange(field.name, value)
+                    }
                   >
-                    <SelectTrigger className="w-full p-2 bg-white border border-gray-300 rounded-md">
-                      <span>{editData[field.name] || field.placeholder}</span>
+                    <SelectTrigger className="w-full p-2 border rounded-md">
+                      {
+                        // Menampilkan nama perusahaan dari options
+                        field.options?.find(
+                          (opt) => opt.value === formValues[field.name]
+                        )?.label || field.placeholder
+                      }
                     </SelectTrigger>
+
                     <SelectContent>
                       {field.options?.map((option) => (
-                        <SelectItem
-                          key={option.value}
-                          value={option.value}
-                          className="p-2 hover:bg-gray-200"
-                        >
-                          {/* Display both id and namaperusahaan */}
-                          {`${option.value} - ${option.label}`}
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -108,9 +123,12 @@ const EditButton: React.FC<EditButtonProps> = ({
                   <Input
                     type={field.type || "text"}
                     name={field.name}
-                    defaultValue={editData[field.name] || ""}
+                    value={formValues[field.name] || ""}
+                    onChange={(e) =>
+                      handleInputChange(field.name, e.target.value)
+                    }
                     placeholder={field.placeholder}
-                    className="mt-2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 w-full"
+                    className="mt-2 p-2 border rounded-md w-full"
                   />
                 )}
               </div>

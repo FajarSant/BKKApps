@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, FormEvent } from "react";
 import { FaPlus } from "react-icons/fa";
 import {
@@ -9,7 +10,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 type FormField = {
   label: string;
@@ -17,7 +25,7 @@ type FormField = {
   type?: string;
   placeholder?: string;
   required?: boolean;
-  options?: { value: string; label: string }[]; // Add options for select type
+  options?: { value: string; label: string }[];
 };
 
 interface ButtonTambahProps {
@@ -29,7 +37,7 @@ interface ButtonTambahProps {
 const ButtonTambah: React.FC<ButtonTambahProps> = ({
   formFields,
   onSubmit,
-  buttonText = "Tambah Pengguna",
+  buttonText = "Tambah Data",
 }) => {
   const [open, setOpen] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -38,15 +46,18 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setErrors({});
+    setFormData(new Map());
     setOpen(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prevFormData) => {
-      const newFormData = new Map(prevFormData);
-      newFormData.set(name, value);
-      return newFormData;
+    setFormData((prev) => {
+      const newData = new Map(prev);
+      newData.set(name, value);
+      return newData;
     });
   };
 
@@ -84,46 +95,68 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="max-h-[500px] overflow-y-auto">
+        <DialogContent className="max-h-[600px] overflow-y-auto">
           <DialogTitle>{buttonText}</DialogTitle>
           <DialogDescription>
-            Silakan masukkan detail pengguna baru di bawah ini.
+            Silakan isi detail yang diperlukan di bawah ini.
           </DialogDescription>
 
           <form onSubmit={handleSubmit}>
             {formFields.map((field, index) => (
               <div key={index} className="mb-4">
-                <label className="block">{field.label}</label>
+                <label className="block mb-1 font-medium">{field.label}</label>
 
                 {field.type === "select" ? (
-                  <select
+                  <Select
+                    value={formData.get(field.name) || ""}
+                    onValueChange={(value) => {
+                      setFormData((prev) => {
+                        const newData = new Map(prev);
+                        newData.set(field.name, value);
+                        return newData;
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <span>
+                        {formData.get(field.name)
+                          ? field.options?.find(
+                              (opt) => opt.value === formData.get(field.name)
+                            )?.label
+                          : `Pilih ${field.label}`}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : field.type === "textarea" ? (
+                  <Textarea
                     name={field.name}
+                    placeholder={field.placeholder}
+                    className="mt-2 p-2 border rounded-md w-full"
                     value={formData.get(field.name) || ""}
                     onChange={handleInputChange}
-                    className="mt-2 p-2 border rounded-md w-full"
-                  >
-                    <option value="">Pilih {field.label}</option>
-                    {field.options?.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.value} - {option.label} {/* Show both ID and company name */}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 ) : (
                   <Input
                     type={field.type || "text"}
                     name={field.name}
                     placeholder={field.placeholder}
-                    className="mt-2 p-2 border rounded-md"
+                    className="mt-2 p-2 border rounded-md w-full"
                     value={formData.get(field.name) || ""}
                     onChange={handleInputChange}
                   />
                 )}
 
                 {errors[field.name] && (
-                  <div className="text-red-600 text-sm mt-1">
+                  <p className="text-red-600 text-sm mt-1">
                     {errors[field.name]}
-                  </div>
+                  </p>
                 )}
               </div>
             ))}
