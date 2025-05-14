@@ -1,8 +1,8 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import ExportButtonExcel from "@/components/Export-Button-Excel";
-import ImportButtonExcel from "@/components/Import-Button-Excel";
+import Swal from "sweetalert2";
+import axiosInstance from "@/lib/axios";
+import ButtonTambah from "@/components/ButtonTambah";
 import SearchInput from "@/components/SearchInput";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,11 +20,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
-import { FaPlus } from "react-icons/fa";
-import Swal from "sweetalert2";
-import axiosInstance from "@/lib/axios";
+import { AiOutlineDelete } from "react-icons/ai";
+import ExportButtonExcel from "@/components/Export-Button-Excel";
+import EditButton from "@/components/Edit-Button";
+import ImportButtonExcel from "@/components/Import-Button-Excel";
 
 interface Pengguna {
   id: number;
@@ -37,6 +36,7 @@ interface Pengguna {
   tanggalLahir?: string;
   jenisKelamin?: string;
   dibuatPada: string;
+  katasandi?: string;
 }
 
 export default function DashboardPengguna() {
@@ -44,7 +44,6 @@ export default function DashboardPengguna() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Fungsi ambil data
   const fetchData = async () => {
     try {
       const response = await axiosInstance.get("/pengguna/getall");
@@ -60,7 +59,6 @@ export default function DashboardPengguna() {
     fetchData();
   }, []);
 
-  // Fungsi import
   const handleUpload = async (file: File) => {
     try {
       const formData = new FormData();
@@ -118,34 +116,59 @@ export default function DashboardPengguna() {
     });
   };
 
-  const handleAdd = async () => {
-    try {
-      await axiosInstance.post("/pengguna/create", {
-        nama: "Pengguna Baru",
-        email: "baru@example.com",
-        peran: "siswa",
-        nisn: "0000000000",
-      });
+  const handleAdd = async (formData: FormData) => {
+    const data = formFields.reduce((acc, field) => {
+      let value = formData.get(field.name);
+      if (field.type === "select" && value !== null) {
+        value = value.toString();
+      }
+      acc[field.name] = value || "";
+      return acc;
+    }, {} as Record<string, string | File>);
 
-      Swal.fire("Berhasil!", "Pengguna baru ditambahkan.", "success");
-      fetchData();
+    try {
+      const response = await axiosInstance.post("/pengguna/create", data);
+      if (response.data) {
+        Swal.fire("Berhasil", "Pengguna berhasil ditambahkan.", "success");
+        fetchData();
+      }
     } catch (error) {
-      Swal.fire("Gagal!", "Gagal menambahkan pengguna.", "error");
+      Swal.fire("Gagal", "Tidak dapat menambah pengguna. Coba lagi.", "error");
     }
   };
 
-  const handleEdit = async (id: number) => {
-    try {
-      await axiosInstance.put(`/pengguna/update/${id}`, {
-        nama: "Nama Diedit",
-      });
+  const handleEdit = async (id: number, formData: FormData) => {
+    const data = formFields.reduce((acc, field) => {
+      let value = formData.get(field.name);
+      if (field.type === "select" && value !== null) {
+        value = value.toString();
+      }
+      acc[field.name] = value || "";
+      return acc;
+    }, {} as Record<string, string | File>);
 
-      Swal.fire("Berhasil!", "Data pengguna berhasil diedit.", "success");
-      fetchData();
+    try {
+      const response = await axiosInstance.put(`/pengguna/update/${id}`, data);
+
+      if (response.data) {
+        setData((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  ...data,
+                }
+              : item
+          )
+        );
+
+        Swal.fire("Berhasil", "Data pengguna berhasil diperbarui.", "success");
+      }
     } catch (error) {
-      Swal.fire("Gagal!", "Gagal mengedit data pengguna.", "error");
+      Swal.fire("Gagal", "Tidak dapat memperbarui data pengguna.", "error");
     }
   };
+
   const highlightText = (text: string, highlight: string) => {
     if (!highlight) return text;
     const parts = text.split(new RegExp(`(${highlight})`, "gi"));
@@ -160,15 +183,69 @@ export default function DashboardPengguna() {
     );
   };
 
+  const formFields = [
+    { label: "Nama", name: "nama", placeholder: "Masukkan nama", type: "text" },
+    {
+      label: "Email",
+      name: "email",
+      placeholder: "Masukkan email",
+      type: "email",
+    },
+    {
+      label: "Kata Sandi",
+      name: "katasandi",
+      placeholder: "Masukkan kata sandi",
+      type: "password",
+    },
+    { label: "NISN", name: "nisn", placeholder: "Masukkan NISN", type: "text" },
+    {
+      label: "Telepon",
+      name: "telepon",
+      placeholder: "Masukkan nomor telepon",
+      type: "text",
+    },
+    {
+      label: "Alamat",
+      name: "alamat",
+      placeholder: "Masukkan alamat",
+      type: "text",
+    },
+    {
+      label: "Tanggal Lahir",
+      name: "tanggalLahir",
+      placeholder: "Masukkan tanggal lahir",
+      type: "date",
+    },
+    {
+      label: "Jenis Kelamin",
+      name: "jenisKelamin",
+      placeholder: "Pilih jenis kelamin",
+      type: "select",
+      options: [
+        { value: "laki_laki", label: "Laki-laki" },
+        { value: "perempuan", label: "Perempuan" },
+      ],
+    },
+    {
+      label: "Peran Pengguna",
+      name: "peran",
+      placeholder: "Pilih peran pengguna",
+      type: "select",
+      options: [
+        { value: "siswa", label: "Siswa" },
+        { value: "alumni", label: "Alumni" },
+        { value: "admin", label: "Admin" },
+      ],
+    },
+  ];
   return (
     <TooltipProvider>
       <div className="p-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <Button variant="default" size="sm" onClick={handleAdd}>
-              <FaPlus className="w-4 h-4 mr-1" /> Tambah Pengguna
-            </Button>
+            <ButtonTambah formFields={formFields} onSubmit={handleAdd} />
             <ImportButtonExcel onUpload={handleUpload} />
+
             <ExportButtonExcel onClick={handleExportExcel} />
           </div>
 
@@ -197,46 +274,40 @@ export default function DashboardPengguna() {
             </TableHeader>
             <TableBody>
               {data
-                .filter((pengguna) =>
-                  pengguna.nama.toLowerCase().includes(searchTerm.toLowerCase())
+                .filter((item) =>
+                  item.nama.toLowerCase().includes(searchTerm.toLowerCase())
                 )
-                .map((pengguna) => (
-                  <TableRow key={pengguna.id}>
+                .map((item) => (
+                  <TableRow key={item.id}>
                     <TableCell className="font-medium">
-                      {highlightText(pengguna.nama, searchTerm)}
+                      {highlightText(item.nama, searchTerm)}
                     </TableCell>
-                    <TableCell>{pengguna.email}</TableCell>
-                    <TableCell>{pengguna.peran}</TableCell>
-                    <TableCell>{pengguna.nisn}</TableCell>
-                    <TableCell>{pengguna.jenisKelamin || "-"}</TableCell>
-                    <TableCell>{pengguna.telepon || "-"}</TableCell>
+                    <TableCell>{item.email}</TableCell>
+                    <TableCell>{item.peran}</TableCell>
+                    <TableCell>{item.nisn}</TableCell>
+                    <TableCell>{item.jenisKelamin || "-"}</TableCell>
+                    <TableCell>{item.telepon || "-"}</TableCell>
                     <TableCell>
-                      {pengguna.tanggalLahir
-                        ? new Date(pengguna.tanggalLahir).toLocaleDateString()
+                      {item.tanggalLahir
+                        ? new Date(item.tanggalLahir).toLocaleDateString()
                         : "-"}
                     </TableCell>
                     <TableCell>
-                      {new Date(pengguna.dibuatPada).toLocaleDateString()}
+                      {new Date(item.dibuatPada).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
+                      <EditButton
+                        key={`edit-button-${item.id}`}
+                        formFields={formFields}
+                        onSubmit={handleEdit}
+                        editData={item}
+                      />
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEdit(pengguna.id)}
-                          >
-                            <AiOutlineEdit className="h-5 w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Edit</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(pengguna.id)}
+                            onClick={() => handleDelete(item.id)}
                           >
                             <AiOutlineDelete className="h-5 w-5 text-red-500" />
                           </Button>

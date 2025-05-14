@@ -17,13 +17,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
+import { AiOutlineDelete } from "react-icons/ai";
 import Swal from "sweetalert2";
 import ImportButtonExcel from "@/components/Import-Button-Excel";
 import ExportButtonExcel from "@/components/Export-Button-Excel";
 import SearchInput from "@/components/SearchInput";
-import BtnTambahPengguna from "@/components/ButtonTambah";
 import EditButton from "@/components/Edit-Button";
+import ButtonTambah from "@/components/ButtonTambah";
 
 interface Perusahaan {
   id: number;
@@ -42,17 +42,16 @@ const DashboardPerusahaan = () => {
 
   const isLoadingRef = useRef(false);
 
-  // Fetch data perusahaan
   const fetchData = useCallback(async () => {
-    if (isLoadingRef.current) return; // Prevent multiple requests
+    if (isLoadingRef.current) return;
     isLoadingRef.current = true;
     setIsLoading(true);
     try {
       const res = await axiosInstance.get("/perusahaan/getall");
-      console.log("Data fetched:", res.data); // Debugging
+      console.log("Data fetched:", res.data);
       const data = Array.isArray(res.data) ? res.data : res.data.data;
 
-      console.log("Data valid:", data); // Debugging
+      console.log("Data valid:", data);
       if (Array.isArray(data)) {
         const sortedData = data.sort((a, b) => a.nama.localeCompare(b.nama));
         setPerusahaan(sortedData);
@@ -72,19 +71,16 @@ const DashboardPerusahaan = () => {
     fetchData();
   }, [fetchData]);
 
-  // Menambah data perusahaan baru
   const handleAdd = async (formData: FormData) => {
     const nama = formData.get("nama") as string;
     const email = formData.get("email") as string;
     const alamat = formData.get("alamat") as string;
 
-    // Validasi form
     if (!nama || !email || !alamat) {
       Swal.fire("Gagal", "Nama, Email, dan Alamat harus diisi.", "error");
       return;
     }
 
-    // Validasi format email
     if (!/\S+@\S+\.\S+/.test(email)) {
       Swal.fire("Gagal", "Format email tidak valid.", "error");
       return;
@@ -102,21 +98,24 @@ const DashboardPerusahaan = () => {
     try {
       const response = await axiosInstance.post("/perusahaan/create", data);
       if (response.data) {
-        await fetchData(); // Update data setelah penambahan
+        await fetchData();
         Swal.fire("Berhasil", "Perusahaan berhasil ditambahkan.", "success");
       } else {
         throw new Error("Data yang diterima tidak valid.");
       }
     } catch (error) {
       console.error("Tambah perusahaan error:", error);
-      Swal.fire("Gagal", "Tidak dapat menambah data perusahaan. Coba lagi.", "error");
+      Swal.fire(
+        "Gagal",
+        "Tidak dapat menambah data perusahaan. Coba lagi.",
+        "error"
+      );
     }
   };
 
-  // Mengimpor data perusahaan dari file
   const handleImport = async (file: File) => {
-    const validExtensions = ['.xlsx', '.xls']; // Add allowed extensions
-    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    const validExtensions = [".xlsx", ".xls"];
+    const fileExtension = file.name.split(".").pop()?.toLowerCase();
 
     if (!validExtensions.includes(`.${fileExtension}`)) {
       Swal.fire("Gagal", "File harus berformat .xlsx atau .xls", "error");
@@ -131,7 +130,7 @@ const DashboardPerusahaan = () => {
       await axiosInstance.post("/perusahaan/import", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      await fetchData(); // Refresh data setelah impor
+      await fetchData();
       Swal.fire("Berhasil", "Data berhasil diimpor.", "success");
     } catch (error) {
       console.error("Import perusahaan error:", error);
@@ -141,7 +140,6 @@ const DashboardPerusahaan = () => {
     }
   };
 
-  // Mengekspor data perusahaan ke file Excel
   const handleExportExcel = async () => {
     setIsLoading(true);
     try {
@@ -167,7 +165,6 @@ const DashboardPerusahaan = () => {
     }
   };
 
-  // Mengedit data perusahaan
   const handleEdit = async (id: number, formData: FormData) => {
     const data = {
       nama: formData.get("nama") as string,
@@ -190,7 +187,6 @@ const DashboardPerusahaan = () => {
     }
   };
 
-  // Menghapus data perusahaan
   const handleDelete = (id: number) => {
     Swal.fire({
       title: "Hapus perusahaan?",
@@ -203,7 +199,7 @@ const DashboardPerusahaan = () => {
       if (result.isConfirmed) {
         try {
           await axiosInstance.delete(`/perusahaan/delete/${id}`);
-          setPerusahaan((prev) => prev.filter((p) => p.id !== id)); // Remove item from state
+          setPerusahaan((prev) => prev.filter((p) => p.id !== id));
           Swal.fire("Berhasil!", "Data perusahaan dihapus.", "success");
         } catch (error) {
           Swal.fire("Gagal", "Tidak dapat menghapus data.", "error");
@@ -212,7 +208,6 @@ const DashboardPerusahaan = () => {
     });
   };
 
-  // Menyoroti teks pada pencarian
   const highlightText = useCallback((text: string, highlight: string) => {
     if (!text || !highlight) return text;
     const regex = new RegExp(`(${highlight})`, "gi");
@@ -259,7 +254,7 @@ const DashboardPerusahaan = () => {
       <div className="p-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <BtnTambahPengguna formFields={formFields} onSubmit={handleAdd} />
+            <ButtonTambah formFields={formFields} onSubmit={handleAdd} />
             <ImportButtonExcel onUpload={handleImport} />
             <ExportButtonExcel onClick={handleExportExcel} />
           </div>

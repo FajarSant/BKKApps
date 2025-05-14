@@ -47,7 +47,15 @@ const EditButton: React.FC<EditButtonProps> = ({
 
   const [formValues, setFormValues] = useState<{ [key: string]: string }>(
     Object.fromEntries(
-      formFields.map((f) => [f.name, editData[f.name]?.toString() || ""])
+      formFields.map((f) => {
+        let value = editData[f.name];
+
+        if (f.type === "date" && value) {
+          value = new Date(value).toISOString().split("T")[0];
+        }
+
+        return [f.name, value?.toString() || ""];
+      })
     )
   );
 
@@ -103,12 +111,9 @@ const EditButton: React.FC<EditButtonProps> = ({
                     }
                   >
                     <SelectTrigger className="w-full p-2 border rounded-md">
-                      {
-                        // Menampilkan nama perusahaan dari options
-                        field.options?.find(
-                          (opt) => opt.value === formValues[field.name]
-                        )?.label || field.placeholder
-                      }
+                      {field.options?.find(
+                        (opt) => opt.value === formValues[field.name]
+                      )?.label || field.placeholder}
                     </SelectTrigger>
 
                     <SelectContent>
