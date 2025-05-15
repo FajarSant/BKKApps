@@ -116,12 +116,20 @@ export default function DashboardPengguna() {
     });
   };
 
+  // handleAdd
   const handleAdd = async (formData: FormData) => {
     const data = formFields.reduce((acc, field) => {
       let value = formData.get(field.name);
+
       if (field.type === "select" && value !== null) {
         value = value.toString();
       }
+
+      // Format tanggal ke ISO string jika ada
+      if (field.name === "tanggalLahir" && value) {
+        value = new Date(value.toString()).toISOString();
+      }
+
       acc[field.name] = value || "";
       return acc;
     }, {} as Record<string, string | File>);
@@ -137,15 +145,28 @@ export default function DashboardPengguna() {
     }
   };
 
+  // handleEdit
   const handleEdit = async (id: number, formData: FormData) => {
     const data = formFields.reduce((acc, field) => {
       let value = formData.get(field.name);
+
       if (field.type === "select" && value !== null) {
         value = value.toString();
       }
-      acc[field.name] = value || "";
+
+      // Jangan kirim katasandi jika kosong
+      if (field.name === "katasandi" && (!value || value === "")) {
+        return acc; // skip
+      }
+
+      // Format tanggal ke ISO jika ada
+      if (field.name === "tanggalLahir" && value) {
+        value = new Date(value.toString()).toISOString();
+      }
+
+      acc[field.name] = value === null || value === "" ? null : value;
       return acc;
-    }, {} as Record<string, string | File>);
+    }, {} as Record<string, string | File | null>);
 
     try {
       const response = await axiosInstance.put(`/pengguna/update/${id}`, data);
@@ -197,12 +218,17 @@ export default function DashboardPengguna() {
       placeholder: "Masukkan kata sandi",
       type: "password",
     },
-    { label: "NISN", name: "nisn", placeholder: "Masukkan NISN", type: "text" },
+    {
+      label: "NISN",
+      name: "nisn",
+      placeholder: "Masukkan NISN",
+      type: "number",
+    },
     {
       label: "Telepon",
       name: "telepon",
       placeholder: "Masukkan nomor telepon",
-      type: "text",
+      type: "number",
     },
     {
       label: "Alamat",
@@ -221,6 +247,7 @@ export default function DashboardPengguna() {
       name: "jenisKelamin",
       placeholder: "Pilih jenis kelamin",
       type: "select",
+      required: true,
       options: [
         { value: "laki_laki", label: "Laki-laki" },
         { value: "perempuan", label: "Perempuan" },
@@ -231,6 +258,7 @@ export default function DashboardPengguna() {
       name: "peran",
       placeholder: "Pilih peran pengguna",
       type: "select",
+      required: true,
       options: [
         { value: "siswa", label: "Siswa" },
         { value: "alumni", label: "Alumni" },
@@ -238,6 +266,7 @@ export default function DashboardPengguna() {
       ],
     },
   ];
+
   return (
     <TooltipProvider>
       <div className="p-6 space-y-6">

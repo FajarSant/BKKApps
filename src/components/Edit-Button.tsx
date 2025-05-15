@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectTrigger,
@@ -49,12 +50,10 @@ const EditButton: React.FC<EditButtonProps> = ({
     Object.fromEntries(
       formFields.map((f) => {
         let value = editData[f.name];
-
         if (f.type === "date" && value) {
-          value = new Date(value).toISOString().split("T")[0];
+          value = new Date(value).toISOString().split("T")[0]; // Format date
         }
-
-        return [f.name, value?.toString() || ""];
+        return [f.name, value?.toString() || ""]; // Set default value
       })
     )
   );
@@ -69,8 +68,8 @@ const EditButton: React.FC<EditButtonProps> = ({
     Object.entries(formValues).forEach(([key, value]) => {
       formData.append(key, value);
     });
-    onSubmit(editData.id, formData);
-    setOpen(false);
+    onSubmit(editData.id, formData); // Submit with id and formData
+    setOpen(false); // Close modal after submit
   };
 
   return (
@@ -124,11 +123,19 @@ const EditButton: React.FC<EditButtonProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
+                ) : field.type === "textarea" ? (  // Check if field is textarea
+                  <Textarea
+                    name={field.name}
+                    placeholder={field.placeholder}
+                    value={formValues[field.name] || ""} // Use formValues for value
+                    onChange={(e) => handleInputChange(field.name, e.target.value)} // Handle change
+                    className="mt-2 p-2 border rounded-md w-full"
+                  />
                 ) : (
                   <Input
                     type={field.type || "text"}
                     name={field.name}
-                    value={formValues[field.name] || ""}
+                    value={formValues[field.name] || ""} // Use formValues for value
                     onChange={(e) =>
                       handleInputChange(field.name, e.target.value)
                     }

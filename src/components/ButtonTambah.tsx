@@ -141,6 +141,7 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
                     className="mt-2 p-2 border rounded-md w-full"
                     value={formData.get(field.name) || ""}
                     onChange={handleInputChange}
+                    required
                   />
                 ) : (
                   <Input
@@ -150,6 +151,7 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
                     className="mt-2 p-2 border rounded-md w-full"
                     value={formData.get(field.name) || ""}
                     onChange={handleInputChange}
+                    required
                   />
                 )}
 
