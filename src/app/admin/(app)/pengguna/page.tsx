@@ -24,6 +24,14 @@ import { AiOutlineDelete } from "react-icons/ai";
 import ExportButtonExcel from "@/components/Export-Button-Excel";
 import EditButton from "@/components/Edit-Button";
 import ImportButtonExcel from "@/components/Import-Button-Excel";
+import {
+  FaSortAlphaDown,
+  FaSortAlphaDownAlt,
+  FaSortDown,
+  FaSortNumericDown,
+  FaSortNumericDownAlt,
+  FaSortUp,
+} from "react-icons/fa";
 
 interface Pengguna {
   id: number;
@@ -43,6 +51,8 @@ export default function DashboardPengguna() {
   const [data, setData] = useState<Pengguna[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortNamaDir, setSortNamaDir] = useState<"asc" | "desc">("asc");
+  const [sortNisnDir, setSortNisnDir] = useState<"asc" | "desc">("asc");
 
   const fetchData = async () => {
     try {
@@ -204,6 +214,28 @@ export default function DashboardPengguna() {
     );
   };
 
+  const handleSortNama = () => {
+    const newDirection = sortNamaDir === "asc" ? "desc" : "asc";
+    const sorted = [...data].sort((a, b) =>
+      newDirection === "asc"
+        ? a.nama.localeCompare(b.nama)
+        : b.nama.localeCompare(a.nama)
+    );
+    setData(sorted);
+    setSortNamaDir(newDirection);
+  };
+
+  const handleSortNisn = () => {
+    const newDirection = sortNisnDir === "asc" ? "desc" : "asc";
+    const sorted = [...data].sort((a, b) => {
+      const aNisn = parseInt(a.nisn || "0", 10);
+      const bNisn = parseInt(b.nisn || "0", 10);
+      return newDirection === "asc" ? aNisn - bNisn : bNisn - aNisn;
+    });
+    setData(sorted);
+    setSortNisnDir(newDirection);
+  };
+
   const formFields = [
     { label: "Nama", name: "nama", placeholder: "Masukkan nama", type: "text" },
     {
@@ -290,10 +322,40 @@ export default function DashboardPengguna() {
             <TableCaption>Daftar pengguna yang terdaftar.</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead>Nama</TableHead>
+                <TableHead
+                  onClick={handleSortNama}
+                  style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  Nama
+                  {sortNamaDir === "asc" ? (
+                    <FaSortAlphaDown style={{ marginLeft: 5 }} />
+                  ) : (
+                    <FaSortAlphaDownAlt style={{ marginLeft: 5 }} />
+                  )}
+                </TableHead>
+
                 <TableHead>Email</TableHead>
                 <TableHead>Peran</TableHead>
-                <TableHead>NISN</TableHead>
+                <TableHead
+                  onClick={handleSortNisn}
+                  style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  NISN
+                  {sortNisnDir === "asc" ? (
+                    <FaSortNumericDown style={{ marginLeft: 5 }} />
+                  ) : (
+                    <FaSortNumericDownAlt style={{ marginLeft: 5 }} />
+                  )}
+                </TableHead>
+
                 <TableHead>Jenis Kelamin</TableHead>
                 <TableHead>Telepon</TableHead>
                 <TableHead>Tanggal Lahir</TableHead>

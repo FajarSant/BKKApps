@@ -26,6 +26,7 @@ import Swal from "sweetalert2";
 import { useEffect, useState } from "react";
 import EditButton from "@/components/Edit-Button";
 import BtnTambahPengguna from "@/components/ButtonTambah";
+import { FaSortAlphaDown, FaSortAlphaDownAlt } from "react-icons/fa";
 
 interface Lowongan {
   id: number;
@@ -48,7 +49,7 @@ export default function DashboardLowongan() {
   const [perusahaanData, setPerusahaanData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [formFields, setFormFields] = useState<any[]>([]);
+  const [sortNamaDir, setSortNamaDir] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     const fetchLowongan = async () => {
@@ -249,6 +250,17 @@ export default function DashboardLowongan() {
     );
   };
 
+  const handleSortNama = () => {
+    const newDirection = sortNamaDir === "asc" ? "desc" : "asc";
+    const sorted = [...lowonganData].sort((a, b) =>
+      newDirection === "asc"
+        ? a.nama.localeCompare(b.nama)
+        : b.nama.localeCompare(a.nama)
+    );
+    setLowonganData(sorted);
+    setSortNamaDir(newDirection);
+  };
+
   const formFieldsLowongan = [
     {
       label: "Nama Lowongan",
@@ -333,7 +345,21 @@ export default function DashboardLowongan() {
             </TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead>Nama</TableHead>
+                <TableHead
+                  onClick={handleSortNama}
+                  style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  Nama
+                  {sortNamaDir === "asc" ? (
+                    <FaSortAlphaDown style={{ marginLeft: 5 }} />
+                  ) : (
+                    <FaSortAlphaDownAlt style={{ marginLeft: 5 }} />
+                  )}
+                </TableHead>
                 <TableHead>Ketentuan</TableHead>
                 <TableHead>Persyaratan</TableHead>
                 <TableHead>Jenis</TableHead>

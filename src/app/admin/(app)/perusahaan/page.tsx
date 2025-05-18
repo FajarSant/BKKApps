@@ -24,6 +24,7 @@ import ExportButtonExcel from "@/components/Export-Button-Excel";
 import SearchInput from "@/components/SearchInput";
 import EditButton from "@/components/Edit-Button";
 import ButtonTambah from "@/components/ButtonTambah";
+import { FaSortAlphaDown, FaSortAlphaDownAlt, FaSortDown, FaSortUp } from "react-icons/fa";
 
 interface Perusahaan {
   id: number;
@@ -39,6 +40,7 @@ const DashboardPerusahaan = () => {
   const [perusahaan, setPerusahaan] = useState<Perusahaan[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [sortNamaDir, setSortNamaDir] = useState<"asc" | "desc">("asc");
 
   const isLoadingRef = useRef(false);
 
@@ -223,6 +225,17 @@ const DashboardPerusahaan = () => {
     );
   }, []);
 
+  const handleSortNama = () => {
+    const newDirection = sortNamaDir === "asc" ? "desc" : "asc";
+    const sorted = [...perusahaan].sort((a, b) =>
+      newDirection === "asc"
+        ? a.nama.localeCompare(b.nama)
+        : b.nama.localeCompare(a.nama)
+    );
+    setPerusahaan(sorted);
+    setSortNamaDir(newDirection);
+  };
+
   const formFields = [
     { label: "Nama", name: "nama", placeholder: "Masukkan nama" },
     {
@@ -267,7 +280,21 @@ const DashboardPerusahaan = () => {
           <TableCaption>Daftar perusahaan terdaftar.</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead>Nama</TableHead>
+              <TableHead
+                onClick={handleSortNama}
+                style={{
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                Nama
+                {sortNamaDir === "asc" ? (
+                  <FaSortAlphaDown style={{ marginLeft: 5 }} />
+                ) : (
+                  <FaSortAlphaDownAlt style={{ marginLeft: 5 }} />
+                )}
+              </TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Url Gambar</TableHead>
               <TableHead>Telepon</TableHead>
