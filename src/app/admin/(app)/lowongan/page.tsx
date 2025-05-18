@@ -14,6 +14,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  FiBriefcase,
+  FiClock,
+  FiUser,
+  FiUserCheck,
+  FiCalendar,
+} from "react-icons/fi";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -21,12 +28,32 @@ import {
 } from "@/components/ui/tooltip";
 import axiosInstance from "@/lib/axios";
 
-import { AiOutlineEye, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
+type StatCardProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+};
+
+import { AiOutlineDelete } from "react-icons/ai";
 import Swal from "sweetalert2";
 import { useEffect, useState } from "react";
 import EditButton from "@/components/Edit-Button";
 import BtnTambahPengguna from "@/components/ButtonTambah";
 import { FaSortAlphaDown, FaSortAlphaDownAlt } from "react-icons/fa";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Lowongan {
   id: number;
@@ -50,6 +77,19 @@ export default function DashboardLowongan() {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortNamaDir, setSortNamaDir] = useState<"asc" | "desc">("asc");
+  const totalLowongan = lowonganData.length;
+  const jenisCounts = {
+    magang: lowonganData.filter((l) => l.jenisPekerjaan === "magang").length,
+    paruh_waktu: lowonganData.filter((l) => l.jenisPekerjaan === "paruh_waktu")
+      .length,
+    penuh_waktu: lowonganData.filter((l) => l.jenisPekerjaan === "penuh_waktu")
+      .length,
+    freelance: lowonganData.filter((l) => l.jenisPekerjaan === "freelance")
+      .length,
+    kontrak: lowonganData.filter((l) => l.jenisPekerjaan === "kontrak").length,
+  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchLowongan = async () => {
@@ -319,111 +359,249 @@ export default function DashboardLowongan() {
     },
   ];
 
+  const filteredData = lowonganData.filter((item) =>
+    item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const StatCard: React.FC<StatCardProps> = ({ icon, label, value }) => (
+    <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg shadow hover:shadow-md transition-shadow duration-300">
+      <div className="text-2xl mb-2">{icon}</div>
+      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="text-xl font-bold text-gray-800">{value}</div>
+    </div>
+  );
+
+  // Enum Jenis
+  enum JenisPekerjaan {
+    magang = "magang",
+    paruh_waktu = "paruh_waktu",
+    penuh_waktu = "penuh_waktu",
+    freelance = "freelance",
+    kontrak = "kontrak",
+  }
+
   return (
     <TooltipProvider>
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <BtnTambahPengguna
-              formFields={formFieldsLowongan}
-              onSubmit={handleAdd}
-            />
-            <ImportButtonExcel onUpload={handleUpload} />
-            <ExportButtonExcel onClick={handleExportExcel} />
-          </div>
-          <div className="w-full md:w-1/3 md:text-right">
-            <SearchInput value={searchTerm} onChange={setSearchTerm} />
-          </div>
-        </div>
+      <section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Dashboard Lowongan</CardTitle>
+            <CardDescription>
+              Kelola dan pantau semua data lowongan perusahaan di sini.
+            </CardDescription>
+          </CardHeader>
 
-        {loading ? (
-          <div>Loading...</div>
-        ) : (
-          <Table>
-            <TableCaption>
-              Daftar lowongan pekerjaan yang tersedia.
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  onClick={handleSortNama}
-                  style={{
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  Nama
-                  {sortNamaDir === "asc" ? (
-                    <FaSortAlphaDown style={{ marginLeft: 5 }} />
-                  ) : (
-                    <FaSortAlphaDownAlt style={{ marginLeft: 5 }} />
-                  )}
-                </TableHead>
-                <TableHead>Ketentuan</TableHead>
-                <TableHead>Persyaratan</TableHead>
-                <TableHead>Jenis</TableHead>
-                <TableHead>Perusahaan</TableHead>
-                <TableHead>Dibuat</TableHead>
-                <TableHead>Expired</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lowonganData
-                .filter((item) =>
-                  item.nama.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-                .map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      {highlightText(item.nama, searchTerm)}
-                    </TableCell>
-                    <TableCell>{item.ketentuan}</TableCell>
-                    <TableCell>{item.persyaratan}</TableCell>
-                    <TableCell>{item.jenisPekerjaan}</TableCell>
-                    <TableCell>{item.perusahaan.nama}</TableCell>
-                    <TableCell>
-                      {new Date(item.dibuatPada).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {item.expiredAt
-                        ? new Date(item.expiredAt).toLocaleDateString()
-                        : "-"}
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <AiOutlineEye className="h-5 w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Lihat</TooltipContent>
-                      </Tooltip>
-                      <EditButton
-                        formFields={formFieldsLowongan}
-                        onSubmit={handleEdit}
-                        editData={item}
-                      />
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <AiOutlineDelete className="h-5 w-5 text-red-500" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Hapus</TooltipContent>
-                      </Tooltip>
-                    </TableCell>
+          <CardContent className="space-y-6">
+            {/* Statistik */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <StatCard
+                icon={
+                  <div className="bg-blue-100 p-2 rounded-full">
+                    <FiBriefcase className="text-blue-600" />
+                  </div>
+                }
+                label="Total Lowongan"
+                value={totalLowongan}
+              />
+              <StatCard
+                icon={
+                  <div className="bg-orange-100 p-2 rounded-full">
+                    <FiClock className="text-orange-500" />
+                  </div>
+                }
+                label="Magang"
+                value={jenisCounts.magang}
+              />
+              <StatCard
+                icon={
+                  <div className="bg-yellow-100 p-2 rounded-full">
+                    <FiUser className="text-yellow-600" />
+                  </div>
+                }
+                label="Paruh Waktu"
+                value={jenisCounts.paruh_waktu}
+              />
+              <StatCard
+                icon={
+                  <div className="bg-green-100 p-2 rounded-full">
+                    <FiUserCheck className="text-green-600" />
+                  </div>
+                }
+                label="Penuh Waktu"
+                value={jenisCounts.penuh_waktu}
+              />
+              <StatCard
+                icon={
+                  <div className="bg-purple-100 p-2 rounded-full">
+                    <FiUser className="text-purple-600" />
+                  </div>
+                }
+                label="Freelance"
+                value={jenisCounts.freelance}
+              />
+              <StatCard
+                icon={
+                  <div className="bg-red-100 p-2 rounded-full">
+                    <FiCalendar className="text-red-600" />
+                  </div>
+                }
+                label="Kontrak"
+                value={jenisCounts.kontrak}
+              />
+            </div>
+
+            {/* Aksi dan Search */}
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-center">
+              <div className="flex flex-wrap gap-3">
+                <BtnTambahPengguna
+                  formFields={formFieldsLowongan}
+                  onSubmit={handleAdd}
+                />
+                <ImportButtonExcel onUpload={handleUpload} />
+                <ExportButtonExcel onClick={handleExportExcel} />
+              </div>
+              <div className="w-full lg:w-full">
+                <SearchInput value={searchTerm} onChange={setSearchTerm} />
+              </div>
+            </div>
+
+            {/* Tabel Lowongan */}
+            {loading ? (
+              <div className="text-center py-10 text-muted-foreground">
+                Memuat data...
+              </div>
+            ) : (
+              <Table>
+                <TableCaption className="text-sm py-2 text-muted-foreground">
+                  Daftar lowongan pekerjaan yang tersedia.
+                </TableCaption>
+                <TableHeader>
+                  <TableRow className="bg-gray-100">
+                    <TableHead
+                      onClick={handleSortNama}
+                      className="cursor-pointer select-none flex items-center gap-2"
+                    >
+                      <span>Nama</span>
+                      {sortNamaDir === "asc" ? (
+                        <FaSortAlphaDown className="h-4 w-4" />
+                      ) : (
+                        <FaSortAlphaDownAlt className="h-4 w-4" />
+                      )}
+                    </TableHead>
+                    <TableHead>Ketentuan</TableHead>
+                    <TableHead>Persyaratan</TableHead>
+                    <TableHead>Jenis</TableHead>
+                    <TableHead>Perusahaan</TableHead>
+                    <TableHead>Dibuat</TableHead>
+                    <TableHead>Expired</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.map((item) => (
+                    <TableRow key={item.id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">
+                        {highlightText(item.nama, searchTerm)}
+                      </TableCell>
+                      <TableCell>{item.ketentuan}</TableCell>
+                      <TableCell>{item.persyaratan}</TableCell>
+                      <TableCell>{item.jenisPekerjaan}</TableCell>
+                      <TableCell>{item.perusahaan.nama}</TableCell>
+                      <TableCell>
+                        {new Date(item.dibuatPada).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {item.expiredAt
+                          ? new Date(item.expiredAt).toLocaleDateString()
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <EditButton
+                          formFields={formFieldsLowongan}
+                          onSubmit={handleEdit}
+                          editData={item}
+                        />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(item.id)}
+                              className="hover:bg-red-100"
+                            >
+                              <AiOutlineDelete className="h-5 w-5 text-red-500" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Hapus</TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+            {!loading && totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 gap-2">
+                <div className="text-sm text-muted-foreground">
+                  Menampilkan {paginatedData.length} dari {filteredData.length}{" "}
+                  data
+                </div>
+                <Pagination>
+                  <PaginationContent className="flex-wrap justify-center sm:justify-end">
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: totalPages }, (_, index) => (
+                      <PaginationItem key={index}>
+                        <button
+                          onClick={() => setCurrentPage(index + 1)}
+                          className={`px-3 py-1 rounded-md text-sm ${
+                            currentPage === index + 1
+                              ? "bg-primary text-white"
+                              : "hover:bg-muted text-gray-700"
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        className={
+                          currentPage === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
     </TooltipProvider>
   );
 }
