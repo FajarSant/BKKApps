@@ -16,6 +16,7 @@ interface CompanyCardProps {
   };
 }
 
+
 const CompanyCard: React.FC<CompanyCardProps> = ({ company }) => {
   return (
     <div className="shadow-lg border rounded-lg overflow-hidden mb-4">
