@@ -12,7 +12,7 @@ import {
         <div className="flex justify-around p-3">
           {/* Home */}
           <NavLink
-            href="/Id/home"
+            href="/Id"
             icon={<FaHome className="w-6 h-6" />}
             label="Home"
           />

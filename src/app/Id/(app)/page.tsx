@@ -22,6 +22,7 @@ interface Job {
 }
 
 interface Company {
+  id: number;            // Tambah id
   name: string;
   description: string;
   jobs: Job[];
@@ -102,6 +103,7 @@ const HomePage: React.FC = () => {
               })) || [];
 
             return {
+              id: company.id,  // tambah id di sini
               name: company.nama,
               description: `Alamat: ${company.alamat} | Email: ${company.email} | Telepon: ${company.telepon}`,
               imageUrl: company.gambar?.trim()
@@ -110,7 +112,7 @@ const HomePage: React.FC = () => {
               jobs,
             };
           })
-          .filter((company) => company.jobs.length > 0); // 💡 Filter perusahaan tanpa lowongan
+          .filter((company) => company.jobs.length > 0); // Filter perusahaan tanpa lowongan
 
         setCompanies(formattedCompanies);
       } catch (error) {
@@ -159,8 +161,8 @@ const HomePage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {companies.map((company, index) => (
-          <CompanyCard key={index} company={company} />
+        {companies.map((company) => (
+          <CompanyCard key={company.id} company={company} />
         ))}
       </div>
     </main>
