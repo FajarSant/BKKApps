@@ -18,7 +18,7 @@ import {
           />
           {/* Jobs */}
           <NavLink
-            href="/Id/jobs"
+            href="/Id/lowongan"
             icon={<FaBriefcase className="w-6 h-6" />}
             label="Jobs"
           />

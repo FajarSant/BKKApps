@@ -2,20 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import axiosInstance from "@/lib/axios";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Bookmark, ArrowRight, Eye } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import CardJob from "@/components/CardJob"; // gunakan komponen custom CardJob
 
 interface Job {
   id: number;
@@ -80,7 +68,7 @@ export default function PerusahaanDetailPage() {
   }
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-8">
+    <main className="container mx-auto p-6">
       {/* Info Perusahaan */}
       <section className="mb-10">
         <h1 className="text-3xl font-bold text-gray-900">{company.nama}</h1>
@@ -110,101 +98,35 @@ export default function PerusahaanDetailPage() {
           </p>
         ) : (
           <div className="grid gap-6">
-            {company.lowongan.map((job) => (
-              <Card
-                key={job.id}
-                className="hover:border-blue-600 transition-all"
-              >
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        {job.nama}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {job.jenisPekerjaan} • Rp {job.salary}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      Dibuat: {new Date(job.dibuatPada).toLocaleDateString()}
-                    </Badge>
-                  </div>
+            {company.lowongan.map((job) => {
+              const salaryNumber = parseInt(job.salary);
+              const salaryFormatted =
+                !isNaN(salaryNumber) && salaryNumber > 0
+                  ? `Rp ${salaryNumber.toLocaleString("id-ID")}`
+                  : "Gaji Tidak Tersedia";
 
-                  <div className="text-sm space-y-2 text-gray-700">
-                    <div>
-                      <strong>Ketentuan:</strong>
-                      <ul className="list-disc list-inside ml-2">
-                        {job.ketentuan.split("\n").map((line, i) => (
-                          <li key={i}>{line}</li>
-                        ))}
-                      </ul>
-                    </div>
+              const requirements = job.persyaratan
+                ? job.persyaratan
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                : [];
 
-                    <div>
-                      <strong>Persyaratan:</strong>
-                      <ul className="list-disc list-inside ml-2">
-                        {job.persyaratan.split("\n").map((line, i) => (
-                          <li key={i}>{line}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-4 border-t">
-                    <p className="text-xs text-muted-foreground">
-                      Berlaku hingga{" "}
-                      {new Date(job.expiredAt).toLocaleDateString()}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline">
-                        <Bookmark className="w-4 h-4 mr-1" /> Simpan
-                      </Button>
-
-                      <Link href={`/lowongan/${job.id}`}>
-                        <Button size="sm" variant="outline">
-                          <Eye className="w-4 h-4 mr-1" /> Lihat Detail
-                        </Button>
-                      </Link>
-
-                      {job.linkPendaftaran ? (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm">
-                              <ArrowRight className="w-4 h-4 mr-1" /> Daftar
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Konfirmasi Pendaftaran</DialogTitle>
-                            </DialogHeader>
-                            <p className="text-sm text-muted-foreground">
-                              Anda akan diarahkan ke halaman pendaftaran
-                              eksternal. Apakah Anda yakin ingin melanjutkan?
-                            </p>
-                            <DialogFooter className="mt-4 flex justify-end gap-2">
-                              <DialogTrigger asChild>
-                                <Button variant="outline">Batal</Button>
-                              </DialogTrigger>
-                              <Button
-                                onClick={() => {
-                                  window.open(job.linkPendaftaran, "_blank");
-                                }}
-                              >
-                                Lanjutkan
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      ) : (
-                        <Button size="sm" disabled>
-                          <ArrowRight className="w-4 h-4 mr-1" /> Tidak Tersedia
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+              return (
+                <CardJob
+                  key={job.id}
+                  id={job.id}
+                  title={job.nama}
+                  description={job.ketentuan}
+                  requirements={requirements}
+                  company={company.nama}
+                  salary={salaryFormatted}
+                  positionLevel={""}
+                  categories={job.jenisPekerjaan ? [job.jenisPekerjaan] : []}
+                  linkPendaftaran={job.linkPendaftaran}
+                />
+              );
+            })}
           </div>
         )}
       </section>

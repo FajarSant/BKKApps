@@ -1,9 +1,13 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FaBookmark } from "react-icons/fa";
 
 interface CardJobProps {
+  id: number;
   title: string;
   description: string;
   requirements: string[];
@@ -11,9 +15,12 @@ interface CardJobProps {
   salary?: string;
   positionLevel?: string;
   categories?: string[];
+  linkPendaftaran?: string;
+  linkDaftar?: string;
 }
 
 const CardJob = ({
+  id,
   title,
   description,
   requirements,
@@ -22,65 +29,97 @@ const CardJob = ({
   positionLevel,
   categories,
 }: CardJobProps) => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push(`/Id/lowongan/${id}`);
+  };
+
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-md relative">
-      {/* Ikon Simpan menggunakan Button */}
-      <div className="absolute right-4 top-4">
-        <Button variant="link" className="p-0" aria-label="Simpan Pekerjaan">
-          <FaBookmark className="w-5 h-5 text-gray-700" />
+    <Card
+      onClick={handleClick}
+      className="relative w-full shadow-md hover:shadow-lg transition-shadow duration-300 bg-white dark:bg-gray-900 border cursor-pointer"
+    >
+      {/* Tombol Simpan */}
+      <div
+        className="absolute right-4 top-4 z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-gray-100 dark:hover:bg-gray-700"
+        >
+          <FaBookmark className="w-5 h-5 text-gray-600 dark:text-gray-300" />
         </Button>
       </div>
 
       {/* Badge Gaji */}
       {salary && (
-        <div className="absolute right-4 top-16">
-          <Badge variant="secondary">{salary}</Badge>
+        <div className="absolute right-4 top-14 z-10">
+          <Badge
+            variant="secondary"
+            className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm font-semibold"
+          >
+            {salary}
+          </Badge>
         </div>
       )}
 
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-        {company && <p className="text-sm text-muted-foreground">{company}</p>}
-        {/* Badge Posisi */}
-        {positionLevel && (
-          <div className="mt-2">
-            <Badge variant="outline" className="text-gray-700">
-              {positionLevel}
-            </Badge>
-          </div>
+      <CardHeader className="pb-2 space-y-1">
+        <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+          {title}
+        </CardTitle>
+
+        {company && (
+          <p className="text-sm text-gray-600 dark:text-gray-400">{company}</p>
         )}
-      </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-1">Deskripsi Pekerjaan:</h4>
-          <p className="text-sm text-gray-600">{description}</p>
-        </div>
-
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-1">Ketentuan / Persyaratan:</h4>
-          <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-            {requirements.map((req, idx) => (
-              <li key={idx}>{req}</li>
-            ))}
-          </ul>
-        </div>
-        
-        {/* Menampilkan kategori pekerjaan (misalnya Frontend, Backend) */}
         {categories && categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {categories.map((category, idx) => (
-              <Badge key={idx} variant="outline" className="text-gray-700">
+          <div className="flex flex-wrap gap-2 pt-2">
+            {categories.map((category, i) => (
+              <Badge
+                key={i}
+                variant="outline"
+                className="text-gray-700 dark:text-gray-300 capitalize"
+              >
                 {category}
               </Badge>
             ))}
           </div>
         )}
-      </CardContent>
 
-      <CardFooter>
-        <Button variant="default" className="ml-auto">Lihat Detail</Button>
-      </CardFooter>
+        {positionLevel && (
+          <Badge
+            variant="outline"
+            className="text-sm font-medium mt-2 text-gray-700 dark:text-gray-300"
+          >
+            {positionLevel}
+          </Badge>
+        )}
+      </CardHeader>
+
+      <CardContent className="space-y-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+        <div>
+          <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+            Deskripsi Pekerjaan:
+          </h4>
+          <p>{description}</p>
+        </div>
+
+        {requirements.length > 0 && (
+          <div>
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+              Ketentuan / Persyaratan:
+            </h4>
+            <ul className="list-disc list-inside space-y-1 marker:text-gray-500 dark:marker:text-gray-400">
+              {requirements.map((req, i) => (
+                <li key={i}>{req}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };
