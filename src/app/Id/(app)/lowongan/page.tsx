@@ -10,10 +10,13 @@ interface Lowongan {
   ketentuan: string;
   persyaratan: string;
   salary: string;
+  dibuatPada: string;
+  expiredAt: string;
   jenisPekerjaan: string;
   linkPendaftaran?: string;
   perusahaan: {
     nama: string;
+    alamat: string;
   };
 }
 
@@ -37,13 +40,11 @@ const Page = () => {
     const fetchJobs = async () => {
       setLoading(true);
       try {
-        const response = await axiosInstance.get("/lowongan/getall");
-        const jobsData = Array.isArray(response.data?.data)
-          ? response.data.data
-          : [];
+        const res = await axiosInstance.get("/lowongan/getall");
+        const jobsData = Array.isArray(res.data?.data) ? res.data.data : [];
         setJobs(jobsData);
       } catch (error) {
-        console.error("Error fetching jobs:", error);
+        console.error("Gagal memuat data:", error);
       } finally {
         setLoading(false);
       }
@@ -66,7 +67,8 @@ const Page = () => {
 
       {/* Content */}
       <section className="space-y-6">
-        {loading && [...Array(3)].map((_, idx) => <SkeletonJobCard key={idx} />)}
+        {loading &&
+          [...Array(3)].map((_, idx) => <SkeletonJobCard key={idx} />)}
 
         {!loading && jobs.length === 0 && (
           <p className="text-center text-gray-500 dark:text-gray-400">
@@ -83,7 +85,10 @@ const Page = () => {
                 : "Gaji Tidak Tersedia";
 
             const requirements = job.persyaratan
-              ? job.persyaratan.split("\n").map((req) => req.trim()).filter(Boolean)
+              ? job.persyaratan
+                  .split("\n")
+                  .map((req) => req.trim())
+                  .filter(Boolean)
               : [];
 
             return (
@@ -97,7 +102,10 @@ const Page = () => {
                 requirements={requirements}
                 positionLevel=""
                 categories={job.jenisPekerjaan ? [job.jenisPekerjaan] : []}
+                dibuatPada={job.dibuatPada}
+                expiredAt={job.expiredAt}
                 linkDaftar={job.linkPendaftaran}
+                alamatPerusahaan={job.perusahaan.alamat}
               />
             );
           })}

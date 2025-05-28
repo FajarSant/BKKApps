@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/lib/axios";
-import CardJob from "@/components/CardJob"; // gunakan komponen custom CardJob
+import CardJob from "@/components/CardJob";
 
 interface Job {
   id: number;
@@ -74,28 +74,18 @@ export default function PerusahaanDetailPage() {
         <h1 className="text-3xl font-bold text-gray-900">{company.nama}</h1>
         <p className="mt-2 text-gray-700">{company.deskripsi}</p>
         <div className="mt-4 text-sm text-gray-600 space-y-1">
-          <p>
-            <strong>Alamat:</strong> {company.alamat}
-          </p>
-          <p>
-            <strong>Email:</strong> {company.email}
-          </p>
-          <p>
-            <strong>Telepon:</strong> {company.telepon}
-          </p>
+          <p><strong>Alamat:</strong> {company.alamat}</p>
+          <p><strong>Email:</strong> {company.email}</p>
+          <p><strong>Telepon:</strong> {company.telepon}</p>
         </div>
       </section>
 
       {/* Lowongan */}
       <section>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-          Lowongan Pekerjaan
-        </h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Lowongan Pekerjaan</h2>
 
         {company.lowongan.length === 0 ? (
-          <p className="text-muted-foreground">
-            Tidak ada lowongan tersedia saat ini.
-          </p>
+          <p className="text-muted-foreground">Tidak ada lowongan tersedia saat ini.</p>
         ) : (
           <div className="grid gap-6">
             {company.lowongan.map((job) => {
@@ -106,10 +96,7 @@ export default function PerusahaanDetailPage() {
                   : "Gaji Tidak Tersedia";
 
               const requirements = job.persyaratan
-                ? job.persyaratan
-                    .split("\n")
-                    .map((line) => line.trim())
-                    .filter(Boolean)
+                ? job.persyaratan.split("\n").map((line) => line.trim()).filter(Boolean)
                 : [];
 
               return (
@@ -121,9 +108,12 @@ export default function PerusahaanDetailPage() {
                   requirements={requirements}
                   company={company.nama}
                   salary={salaryFormatted}
-                  positionLevel={""}
+                  positionLevel=""
+                  dibuatPada={job.dibuatPada}
+                  expiredAt={job.expiredAt}
                   categories={job.jenisPekerjaan ? [job.jenisPekerjaan] : []}
-                  linkPendaftaran={job.linkPendaftaran}
+                  linkDaftar={job.linkPendaftaran}
+                  alamatPerusahaan={company.alamat}
                 />
               );
             })}

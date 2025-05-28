@@ -1,21 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { FaBookmark } from "react-icons/fa";
 
 interface CardJobProps {
   id: number;
   title: string;
   description: string;
   requirements: string[];
+  alamatPerusahaan?: string;
   company?: string;
   salary?: string;
   positionLevel?: string;
   categories?: string[];
-  linkPendaftaran?: string;
+  dibuatPada: string;
+  expiredAt: string;
   linkDaftar?: string;
 }
 
@@ -28,6 +34,10 @@ const CardJob = ({
   salary,
   positionLevel,
   categories,
+  dibuatPada,
+  expiredAt,
+  linkDaftar,
+  alamatPerusahaan,
 }: CardJobProps) => {
   const router = useRouter();
 
@@ -38,88 +48,103 @@ const CardJob = ({
   return (
     <Card
       onClick={handleClick}
-      className="relative w-full shadow-md hover:shadow-lg transition-shadow duration-300 bg-white dark:bg-gray-900 border cursor-pointer"
+      className="w-full hover:shadow-lg transition-shadow duration-300 cursor-pointer"
     >
-      {/* Tombol Simpan */}
-      <div
-        className="absolute right-4 top-4 z-10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hover:bg-gray-100 dark:hover:bg-gray-700"
-        >
-          <FaBookmark className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-        </Button>
-      </div>
+      <CardHeader>
+        <div className="flex justify-between items-start gap-4 flex-wrap">
+          <div>
+            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+              {title}
+            </CardTitle>
+            {company && (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {company}
+              </p>
+            )}
+            {alamatPerusahaan && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                {alamatPerusahaan}
+              </p>
+            )}
+          </div>
 
-      {/* Badge Gaji */}
-      {salary && (
-        <div className="absolute right-4 top-14 z-10">
-          <Badge
-            variant="secondary"
-            className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm font-semibold"
-          >
-            {salary}
-          </Badge>
+          {salary && (
+            <Badge
+              variant="outline"
+              className="text-xs text-gray-700 dark:text-gray-300 capitalize"
+            >
+              {salary}
+            </Badge>
+          )}
         </div>
-      )}
 
-      <CardHeader className="pb-2 space-y-1">
-        <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
-          {title}
-        </CardTitle>
-
-        {company && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">{company}</p>
-        )}
-
-        {categories && categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {categories.map((category, i) => (
+        {(categories?.length || positionLevel) && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {categories?.map((category, i) => (
               <Badge
                 key={i}
                 variant="outline"
-                className="text-gray-700 dark:text-gray-300 capitalize"
+                className="text-xs text-gray-700 dark:text-gray-300 capitalize"
               >
                 {category}
               </Badge>
             ))}
-          </div>
-        )}
 
-        {positionLevel && (
-          <Badge
-            variant="outline"
-            className="text-sm font-medium mt-2 text-gray-700 dark:text-gray-300"
-          >
-            {positionLevel}
-          </Badge>
+            {positionLevel && (
+              <Badge
+                variant="outline"
+                className="text-xs text-blue-700 dark:text-blue-300"
+              >
+                {positionLevel}
+              </Badge>
+            )}
+          </div>
         )}
       </CardHeader>
 
-      <CardContent className="space-y-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+      <CardContent className="space-y-4 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+        {/* Deskripsi */}
         <div>
-          <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+          <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
             Deskripsi Pekerjaan:
           </h4>
-          <p>{description}</p>
+          <ul className="list-disc list-inside space-y-1 marker:text-gray-500 dark:marker:text-gray-400">
+            {description
+              .split("\n")
+              .map((item) => item.trim())
+              .filter(Boolean)
+              .slice(0, 3)
+              .map((descItem, i) => (
+                <li key={i} className="line-clamp-1">
+                  {descItem}
+                </li>
+              ))}
+          </ul>
         </div>
 
+        {/* Persyaratan */}
         {requirements.length > 0 && (
           <div>
-            <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
               Ketentuan / Persyaratan:
             </h4>
             <ul className="list-disc list-inside space-y-1 marker:text-gray-500 dark:marker:text-gray-400">
-              {requirements.map((req, i) => (
-                <li key={i}>{req}</li>
+              {requirements.slice(0, 3).map((req, i) => (
+                <li key={i} className="line-clamp-1">
+                  {req}
+                </li>
               ))}
             </ul>
           </div>
         )}
       </CardContent>
+
+      <CardFooter className="flex justify-end">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Dibuat: {new Date(dibuatPada).toLocaleDateString("id-ID")} • Berlaku
+          hingga {new Date(expiredAt).toLocaleDateString("id-ID")}
+        </p>
+      </CardFooter>
     </Card>
   );
 };

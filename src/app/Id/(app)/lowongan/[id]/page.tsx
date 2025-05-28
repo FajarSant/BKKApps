@@ -5,7 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Bookmark } from "lucide-react";
+import { FaArrowLeft } from "react-icons/fa";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FaArrowLeft } from "react-icons/fa";
 
 interface Job {
   id: number;
@@ -30,21 +31,42 @@ interface Job {
   perusahaan: {
     nama: string;
     alamat: string;
+    email: string;
+    deskripsi: string;
   };
 }
 
+interface SavedJob {
+  lowonganId: number;
+  penggunaId: number;
+}
+
 export default function LowonganDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
+
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
+
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [openSaveDialog, setOpenSaveDialog] = useState(false);
 
   useEffect(() => {
-    const fetchJob = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/lowongan/get/${id}`);
-        setJob(response.data.data);
+        const [jobRes, userRes] = await Promise.all([
+          axiosInstance.get(`/lowongan/get/${id}`),
+          axiosInstance.get("/auth/profile"),
+        ]);
+        setJob(jobRes.data.data);
+        const user = userRes.data?.data || userRes.data;
+        if (user?.id) {
+          setUserId(user.id);
+          checkIfSaved(user.id, Number(id));
+        }
       } catch (err) {
         setError("Gagal memuat detail lowongan.");
         console.error(err);
@@ -53,8 +75,54 @@ export default function LowonganDetailPage() {
       }
     };
 
-    if (id) fetchJob();
+    const checkIfSaved = async (penggunaId: number, lowonganId: number) => {
+      try {
+        const res = await axiosInstance.get(`/lowongan-disimpan/${penggunaId}`);
+        const savedList: SavedJob[] = res.data?.data || [];
+        const isSaved = savedList.some((item) => item.lowonganId === lowonganId);
+        setSaved(isSaved);
+      } catch (err) {
+        console.error("Gagal mengecek simpanan:", err);
+      }
+    };
+
+    if (id) {
+      fetchData();
+    }
   }, [id]);
+
+  const handleConfirmSave = async () => {
+    if (!job || !userId) {
+      toast.error("Data tidak lengkap.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const res = await axiosInstance.post("/lowongan-disimpan", {
+        lowonganId: job.id,
+        penggunaId: userId,
+      });
+
+      if (res.data.status === "success") {
+        setSaved(true);
+        toast.success("Lowongan berhasil disimpan.");
+        setOpenSaveDialog(false);
+      } else {
+        toast.error(res.data.message || "Gagal menyimpan lowongan.");
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        typeof err === "object" && err !== null && "response" in err
+          ? (err as any).response?.data?.message || "Terjadi kesalahan."
+          : "Gagal menyimpan lowongan.";
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -83,7 +151,7 @@ export default function LowonganDetailPage() {
 
   return (
     <main className="container mx-auto p-6">
-      {/* ✅ Topbar */}
+      {/* Header */}
       <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b dark:border-gray-700 flex items-center h-14 px-4 sm:px-6 lg:px-8 shadow-sm">
         <div className="flex items-center gap-4 w-full relative">
           <button
@@ -99,9 +167,9 @@ export default function LowonganDetailPage() {
         </div>
       </header>
 
-      {/* ✅ Informasi utama */}
-      <section className="space-y-3">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+      {/* Job Info */}
+      <section className="space-y-3 mt-10">
+        <h1 className="text-2xl md:text-3xl text-center mb-10 font-bold text-gray-900 dark:text-white">
           {job.nama}
         </h1>
         <p className="text-base text-gray-700 dark:text-gray-300">
@@ -112,33 +180,25 @@ export default function LowonganDetailPage() {
           Dibuat: {new Date(job.dibuatPada).toLocaleDateString("id-ID")} •
           Berlaku hingga {new Date(job.expiredAt).toLocaleDateString("id-ID")}
         </p>
-        <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1 pt-2">
-          <p>
-            <strong>Perusahaan:</strong> {job.perusahaan?.nama}
-          </p>
-          <p>
-            <strong>Alamat:</strong> {job.perusahaan?.alamat}
-          </p>
+        <div className="text-sm text-gray-700 dark:text-gray-300 space-y-4 pt-2">
+          <p><strong>Perusahaan:</strong> {job.perusahaan?.nama}</p>
+          <p>{job.perusahaan?.deskripsi}</p>
+          <p><strong>Alamat:</strong> {job.perusahaan?.alamat}</p>
+          <p><strong>Email:</strong> {job.perusahaan?.email}</p>
         </div>
       </section>
 
-      {/* ✅ Ketentuan */}
-      <section className="space-y-2">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          Ketentuan
-        </h2>
+      {/* Ketentuan & Persyaratan */}
+      <section className="space-y-4 mt-10 mb-10">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Ketentuan</h2>
         <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
           {job.ketentuan.split("\n").map((line, i) => (
             <li key={i}>{line}</li>
           ))}
         </ul>
       </section>
-
-      {/* ✅ Persyaratan */}
-      <section className="space-y-2">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          Persyaratan
-        </h2>
+      <section className="space-y-4 mb-10">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Persyaratan</h2>
         <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
           {job.persyaratan.split("\n").map((line, i) => (
             <li key={i}>{line}</li>
@@ -146,43 +206,86 @@ export default function LowonganDetailPage() {
         </ul>
       </section>
 
-      {/* ✅ Tombol Daftar */}
-      <section className="pt-4 border-t dark:border-gray-700">
-        {job.linkPendaftaran ? (
-          <Dialog>
+      {/* Actions */}
+      <section className="pt-4 border-t dark:border-gray-700 mt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Tombol Daftar */}
+          {job.linkPendaftaran ? (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="lg" variant="success" className="w-full sm:w-auto">
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Daftar Sekarang
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Konfirmasi Pendaftaran</DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground">
+                  Anda akan diarahkan ke halaman pendaftaran eksternal. Lanjutkan?
+                </p>
+                <DialogFooter className="mt-4 flex justify-end gap-2">
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Batal</Button>
+                  </DialogTrigger>
+                  <Button
+                    size="lg"
+                    variant="destructive"
+                    onClick={() => window.open(job.linkPendaftaran, "_blank")}
+                  >
+                    Lanjutkan
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <Button disabled className="w-full sm:w-auto">
+              <ArrowRight className="w-4 h-4 mr-2" />
+              Pendaftaran Tidak Tersedia
+            </Button>
+          )}
+
+          {/* Tombol Simpan */}
+          <Dialog open={openSaveDialog} onOpenChange={setOpenSaveDialog}>
             <DialogTrigger asChild>
-              <Button size="lg" className="mt-4 w-full sm:w-auto">
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Daftar Sekarang
+              <Button
+                variant={saved ? "secondary" : "default"}
+                size="lg"
+                className="w-full sm:w-auto"
+                disabled={saving || saved}
+              >
+                <Bookmark className="w-4 h-4 mr-2" />
+                {saving ? "Menyimpan..." : saved ? "Tersimpan" : "Simpan"}
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-sm">
               <DialogHeader>
-                <DialogTitle>Konfirmasi Pendaftaran</DialogTitle>
+                <DialogTitle>Konfirmasi Simpan Lowongan</DialogTitle>
               </DialogHeader>
               <p className="text-sm text-muted-foreground">
-                Anda akan diarahkan ke halaman pendaftaran eksternal. Lanjutkan?
+                Apakah Anda yakin ingin menyimpan lowongan ini?
               </p>
               <DialogFooter className="mt-4 flex justify-end gap-2">
-                <DialogTrigger asChild>
-                  <Button variant="outline">Batal</Button>
-                </DialogTrigger>
                 <Button
-                  onClick={() => {
-                    window.open(job.linkPendaftaran, "_blank");
-                  }}
+                  variant="outline"
+                  onClick={() => setOpenSaveDialog(false)}
+                  disabled={saving}
                 >
-                  Lanjutkan
+                  Batal
+                </Button>
+                <Button
+                  size="lg"
+                  variant="default"
+                  onClick={handleConfirmSave}
+                  disabled={saving}
+                >
+                  {saving ? "Menyimpan..." : "Ya, Simpan"}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        ) : (
-          <Button disabled className="mt-4 w-full sm:w-auto">
-            <ArrowRight className="w-4 h-4 mr-2" />
-            Pendaftaran Tidak Tersedia
-          </Button>
-        )}
+        </div>
       </section>
     </main>
   );
