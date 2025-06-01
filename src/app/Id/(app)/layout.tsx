@@ -6,7 +6,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col min-h-screen overflow-hidden mb-20">
       <main className="flex-1  overflow-hidden transition-all duration-300 ease-in-out mb-10">
         {children}
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-center" richColors />
       </main>
       <BottomNav />
     </div>

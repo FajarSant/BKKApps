@@ -8,23 +8,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Bookmark } from "lucide-react";
 import { FaArrowLeft } from "react-icons/fa";
 import { toast } from "sonner";
-
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { AxiosError } from "axios";
 
 interface ApiResponse {
   status: string;
   message?: string;
   data?: unknown;
+}
+
+interface ErrorResponse {
+  message: string;
 }
 
 interface Job {
@@ -62,6 +56,7 @@ export default function LowonganDetailPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openApplyDialog, setOpenApplyDialog] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,14 +104,20 @@ export default function LowonganDetailPage() {
         penggunaId: userId,
       });
 
+      const message = res.data.message || "Lowongan berhasil disimpan.";
+
       if (res.data.status === "success") {
         setSaved(true);
-        toast.success("Lowongan berhasil disimpan.", { id: "toast-simpan-lowongan" });
+        toast.success(message, { id: "toast-simpan-lowongan" });
       } else {
-        toast.error(res.data.message ?? "Gagal menyimpan.", { id: "toast-simpan-lowongan" });
+        toast.error(message, { id: "toast-simpan-lowongan" });
       }
-    } catch (err) {
-      toast.error("Terjadi kesalahan saat menyimpan.", { id: "toast-simpan-lowongan" });
+    } catch (error) {
+      const axiosError = error as AxiosError<ErrorResponse>;
+      const errorMessage =
+        axiosError.response?.data?.message ||
+        "Terjadi kesalahan saat menyimpan.";
+      toast.error(errorMessage, { id: "toast-simpan-lowongan" });
     } finally {
       setSaving(false);
       setOpenDialog(false);
@@ -124,10 +125,15 @@ export default function LowonganDetailPage() {
   };
 
   const handleDialogClose = (isOpen: boolean) => {
-    if (!isOpen && !saving) {
-      toast.message(" Lowongan tidak jadi dI simpan.");
-    }
+    if (!isOpen && !saving) 
     setOpenDialog(isOpen);
+  };
+
+  const handleApplyClick = () => {
+    if (job?.linkPendaftaran) {
+      window.open(job.linkPendaftaran, "_blank");
+      setOpenApplyDialog(false);
+    }
   };
 
   if (loading) {
@@ -181,8 +187,8 @@ export default function LowonganDetailPage() {
           <span className="text-green-600 font-semibold">Rp {job.salary}</span>
         </p>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Dibuat: {new Date(job.dibuatPada).toLocaleDateString("id-ID")} • Berlaku hingga{" "}
-          {new Date(job.expiredAt).toLocaleDateString("id-ID")}
+          Dibuat: {new Date(job.dibuatPada).toLocaleDateString("id-ID")} •
+          Berlaku hingga {new Date(job.expiredAt).toLocaleDateString("id-ID")}
         </p>
         <div className="text-sm text-gray-700 dark:text-gray-300 space-y-4 pt-2">
           <p>
@@ -199,7 +205,9 @@ export default function LowonganDetailPage() {
       </section>
 
       <section className="space-y-4 mt-10 mb-10">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Ketentuan</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Ketentuan
+        </h2>
         <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
           {job.ketentuan.split("\n").map((line, i) => (
             <li key={i}>{line}</li>
@@ -208,7 +216,9 @@ export default function LowonganDetailPage() {
       </section>
 
       <section className="space-y-4 mb-10">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Persyaratan</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Persyaratan
+        </h2>
         <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
           {job.persyaratan.split("\n").map((line, i) => (
             <li key={i}>{line}</li>
@@ -218,19 +228,39 @@ export default function LowonganDetailPage() {
 
       <section className="pt-4 border-t dark:border-gray-700 mt-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <Button
-            size="lg"
-            variant="success"
-            className="w-full sm:w-auto"
-            onClick={() => window.open(job.linkPendaftaran, "_blank")}
-            disabled={!job.linkPendaftaran}
-          >
-            <ArrowRight className="w-4 h-4 mr-2" />
-            {job.linkPendaftaran ? "Daftar Sekarang" : "Pendaftaran Tidak Tersedia"}
-          </Button>
+          {/* Dialog Pendaftaran */}
+          <ConfirmDialog
+            open={openApplyDialog}
+            onOpenChange={setOpenApplyDialog}
+            title="Konfirmasi Pendaftaran"
+            description="Apakah Anda yakin ingin melanjutkan ke halaman pendaftaran?"
+            onConfirm={handleApplyClick}
+            trigger={
+              <Button
+                size="lg"
+                variant="success"
+                className="w-full sm:w-auto"
+                disabled={!job.linkPendaftaran}
+                onClick={() => setOpenApplyDialog(true)}
+              >
+                <ArrowRight className="w-4 h-4 mr-2" />
+                {job.linkPendaftaran
+                  ? "Daftar Sekarang"
+                  : "Pendaftaran Tidak Tersedia"}
+              </Button>
+            }
+          />
 
-          <AlertDialog open={openDialog} onOpenChange={handleDialogClose}>
-            <AlertDialogTrigger asChild>
+          {/* Dialog Simpan */}
+          <ConfirmDialog
+            open={openDialog}
+            onOpenChange={handleDialogClose}
+            title="Konfirmasi Simpan Lowongan"
+            description="Apakah Anda yakin ingin menyimpan lowongan pekerjaan ini?"
+            onConfirm={handleSave}
+            confirmText={saving ? "Menyimpan..." : "Simpan"}
+            confirmDisabled={saving}
+            trigger={
               <Button
                 variant={saved ? "secondary" : "default"}
                 size="lg"
@@ -241,22 +271,8 @@ export default function LowonganDetailPage() {
                 <Bookmark className="w-4 h-4 mr-2" />
                 {saving ? "Menyimpan..." : saved ? "Tersimpan" : "Simpan"}
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Konfirmasi Simpan Lowongan</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Apakah Anda yakin ingin menyimpan lowongan pekerjaan ini?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Batalkan</AlertDialogCancel>
-                <AlertDialogAction onClick={handleSave} disabled={saving}>
-                  {saving ? "Menyimpan..." : "Simpan"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            }
+          />
         </div>
       </section>
     </main>
