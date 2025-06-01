@@ -125,8 +125,7 @@ export default function LowonganDetailPage() {
   };
 
   const handleDialogClose = (isOpen: boolean) => {
-    if (!isOpen && !saving) 
-    setOpenDialog(isOpen);
+    if (!isOpen && !saving) setOpenDialog(isOpen);
   };
 
   const handleApplyClick = () => {
@@ -163,20 +162,18 @@ export default function LowonganDetailPage() {
 
   return (
     <main className="container mx-auto p-6">
-      <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b dark:border-gray-700 flex items-center h-14 px-4 sm:px-6 lg:px-8 shadow-sm">
-        <div className="flex items-center gap-4 w-full relative">
-          <button
-            onClick={() => router.push("/Id/lowongan")}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-            aria-label="Kembali"
-          >
-            <FaArrowLeft className="text-gray-700 dark:text-gray-200 w-5 h-5" />
-          </button>
-          <h1 className="absolute left-1/2 transform -translate-x-1/2 font-semibold text-lg text-gray-800 dark:text-gray-100">
-            Detail Lowongan
-          </h1>
-        </div>
-      </header>
+      <div className="flex items-center gap-4 w-full relative border-b-2">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+          aria-label="Kembali"
+        >
+          <FaArrowLeft className="text-gray-700 dark:text-gray-200 w-5 h-5" />
+        </button>
+        <h1 className="absolute left-1/2 transform -translate-x-1/2 font-semibold text-lg text-gray-800 dark:text-gray-100">
+          Detail Perusahaan
+        </h1>
+      </div>
 
       <section className="space-y-3 mt-10">
         <h1 className="text-2xl md:text-3xl text-center mb-10 font-bold text-gray-900 dark:text-white">

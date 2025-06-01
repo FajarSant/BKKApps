@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+
 import axiosInstance from "@/lib/axios";
 import CardJob from "@/components/CardJob";
+import { FaArrowLeft } from "react-icons/fa";
 
 interface Job {
   id: number;
@@ -31,6 +33,8 @@ interface CompanyDetail {
 
 export default function PerusahaanDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
+
   const [company, setCompany] = useState<CompanyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,22 +74,44 @@ export default function PerusahaanDetailPage() {
   return (
     <main className="container mx-auto p-6">
       {/* Info Perusahaan */}
-      <section className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-900">{company.nama}</h1>
-        <p className="mt-2 text-gray-700">{company.deskripsi}</p>
-        <div className="mt-4 text-sm text-gray-600 space-y-1">
-          <p><strong>Alamat:</strong> {company.alamat}</p>
-          <p><strong>Email:</strong> {company.email}</p>
-          <p><strong>Telepon:</strong> {company.telepon}</p>
+      <div className="flex items-center gap-4 w-full relative border-b-2">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+          aria-label="Kembali"
+        >
+          <FaArrowLeft className="text-gray-700 dark:text-gray-200 w-5 h-5" />
+        </button>
+        <h1 className="absolute left-1/2 transform -translate-x-1/2 font-semibold text-lg text-gray-800 dark:text-gray-100">
+          Detail Lowongan
+        </h1>
+      </div>
+      <section className="mb-10 mt-10">
+        <h1 className="text-3xl text-center font-bold mb-10 text-gray-900">{company.nama}</h1>
+        <p className="mt-2 text-justify text-gray-700">{company.deskripsi}</p>
+        <div className="mt-4 text-sm text-gray-600 space-y-6">
+          <p>
+            <strong>Alamat:</strong> {company.alamat}
+          </p>
+          <p>
+            <strong>Email:</strong> {company.email}
+          </p>
+          <p>
+            <strong>Telepon:</strong> {company.telepon}
+          </p>
         </div>
       </section>
 
       {/* Lowongan */}
       <section>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Lowongan Pekerjaan</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+          Lowongan Pekerjaan
+        </h2>
 
         {company.lowongan.length === 0 ? (
-          <p className="text-muted-foreground">Tidak ada lowongan tersedia saat ini.</p>
+          <p className="text-muted-foreground">
+            Tidak ada lowongan tersedia saat ini.
+          </p>
         ) : (
           <div className="grid gap-6">
             {company.lowongan.map((job) => {
@@ -96,7 +122,10 @@ export default function PerusahaanDetailPage() {
                   : "Gaji Tidak Tersedia";
 
               const requirements = job.persyaratan
-                ? job.persyaratan.split("\n").map((line) => line.trim()).filter(Boolean)
+                ? job.persyaratan
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
                 : [];
 
               return (
