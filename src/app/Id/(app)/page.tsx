@@ -26,7 +26,6 @@ interface Company {
   name: string;
   description: string;
   jobs: Job[];
-  imageUrl: string;
 }
 
 interface JobApiResponse {
@@ -56,19 +55,6 @@ interface CompanyApiResponse {
 const HomePage: React.FC = () => {
   const [userData, setUserData] = useState<User | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
-
-  const DEFAULT_IMAGES = [
-    "/images/gambar1.jpeg",
-    "/images/gambar2.jpeg",
-    "/images/gambar3.jpeg",
-    "/images/gambar4.jpeg",
-    "/images/gambar5.jpeg",
-    "/images/gambar6.jpeg",
-  ];
-
-  function getRandomDefaultImage() {
-    return DEFAULT_IMAGES[Math.floor(Math.random() * DEFAULT_IMAGES.length)];
-  }
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -119,9 +105,7 @@ const HomePage: React.FC = () => {
             id: company.id,
             name: company.nama,
             description: `Alamat: ${company.alamat} | Email: ${company.email} | Telepon: ${company.telepon}`,
-            imageUrl: company.gambar?.trim()
-              ? company.gambar
-              : getRandomDefaultImage(),
+
             jobs: [
               {
                 title: job.nama,

@@ -24,7 +24,7 @@ import ExportButtonExcel from "@/components/Export-Button-Excel";
 import SearchInput from "@/components/SearchInput";
 import EditButton from "@/components/Edit-Button";
 import ButtonTambah from "@/components/ButtonTambah";
-import { FaSortAlphaDown, FaSortAlphaDownAlt, FaSortDown, FaSortUp } from "react-icons/fa";
+import { FaSortAlphaDown, FaSortAlphaDownAlt } from "react-icons/fa";
 
 interface Perusahaan {
   id: number;
@@ -203,7 +203,7 @@ const DashboardPerusahaan = () => {
           await axiosInstance.delete(`/perusahaan/delete/${id}`);
           setPerusahaan((prev) => prev.filter((p) => p.id !== id));
           Swal.fire("Berhasil!", "Data perusahaan dihapus.", "success");
-        } catch (error) {
+        } catch {
           Swal.fire("Gagal", "Tidak dapat menghapus data.", "error");
         }
       }
@@ -276,67 +276,79 @@ const DashboardPerusahaan = () => {
           </div>
         </div>
 
-        <Table>
-          <TableCaption>Daftar perusahaan terdaftar.</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead
-                onClick={handleSortNama}
-                style={{
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                Nama
-                {sortNamaDir === "asc" ? (
-                  <FaSortAlphaDown style={{ marginLeft: 5 }} />
-                ) : (
-                  <FaSortAlphaDownAlt style={{ marginLeft: 5 }} />
-                )}
-              </TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Url Gambar</TableHead>
-              <TableHead>Telepon</TableHead>
-              <TableHead>Alamat</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {perusahaan
-              .filter((item) =>
-                item.nama.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-              .map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{highlightText(item.nama, searchTerm)}</TableCell>
-                  <TableCell>{item.email}</TableCell>
-                  <TableCell>{item.gambar}</TableCell>
-                  <TableCell>{item.telepon}</TableCell>
-                  <TableCell>{item.alamat}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <EditButton
-                        key={`edit-button-${item.id}`}
-                        formFields={formFields}
-                        onSubmit={handleEdit}
-                        editData={item}
-                      />
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <AiOutlineDelete
-                            onClick={() => handleDelete(item.id)}
-                            className="cursor-pointer text-red-500"
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent>Hapus</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+        {isLoading ? (
+          <p className="text-gray-500 text-center py-4">
+            Memuat data perusahaan...
+          </p>
+        ) : perusahaan.length === 0 ? (
+          <p className="text-gray-500 text-center py-4">
+            Tidak ada data perusahaan ditemukan.
+          </p>
+        ) : (
+          <Table>
+            <TableCaption>Daftar perusahaan terdaftar.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead
+                  onClick={handleSortNama}
+                  style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  Nama
+                  {sortNamaDir === "asc" ? (
+                    <FaSortAlphaDown style={{ marginLeft: 5 }} />
+                  ) : (
+                    <FaSortAlphaDownAlt style={{ marginLeft: 5 }} />
+                  )}
+                </TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Url Gambar</TableHead>
+                <TableHead>Telepon</TableHead>
+                <TableHead>Alamat</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {perusahaan
+                .filter((item) =>
+                  item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      {highlightText(item.nama, searchTerm)}
+                    </TableCell>
+                    <TableCell>{item.email}</TableCell>
+                    <TableCell>{item.gambar}</TableCell>
+                    <TableCell>{item.telepon}</TableCell>
+                    <TableCell>{item.alamat}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <EditButton
+                          key={`edit-button-${item.id}`}
+                          formFields={formFields}
+                          onSubmit={handleEdit}
+                          editData={item}
+                        />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AiOutlineDelete
+                              onClick={() => handleDelete(item.id)}
+                              className="cursor-pointer text-red-500"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>Hapus</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
     </TooltipProvider>
   );

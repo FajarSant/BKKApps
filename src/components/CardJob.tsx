@@ -36,7 +36,6 @@ const CardJob = ({
   categories,
   dibuatPada,
   expiredAt,
-  linkDaftar,
   alamatPerusahaan,
 }: CardJobProps) => {
   const router = useRouter();

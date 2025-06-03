@@ -1,4 +1,3 @@
-// components/ui/confirm-dialog.tsx
 import {
   AlertDialog,
   AlertDialogTrigger,

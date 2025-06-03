@@ -51,7 +51,9 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -63,7 +65,7 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let formErrors: { [key: string]: string } = {};
+    const formErrors: { [key: string]: string } = {};
 
     formFields.forEach((field) => {
       const fieldValue = formData.get(field.name);

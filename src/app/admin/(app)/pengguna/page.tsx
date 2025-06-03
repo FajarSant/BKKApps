@@ -27,10 +27,8 @@ import ImportButtonExcel from "@/components/Import-Button-Excel";
 import {
   FaSortAlphaDown,
   FaSortAlphaDownAlt,
-  FaSortDown,
   FaSortNumericDown,
   FaSortNumericDownAlt,
-  FaSortUp,
 } from "react-icons/fa";
 
 interface Pengguna {
@@ -80,7 +78,7 @@ export default function DashboardPengguna() {
 
       Swal.fire("Berhasil!", "Data pengguna berhasil diimpor.", "success");
       fetchData();
-    } catch (error) {
+    } catch {
       Swal.fire("Gagal!", "Gagal mengimpor data.", "error");
     }
   };
@@ -119,7 +117,7 @@ export default function DashboardPengguna() {
           await axiosInstance.delete(`/pengguna/delete/${id}`);
           Swal.fire("Dihapus!", "Pengguna telah dihapus.", "success");
           fetchData();
-        } catch (error) {
+        } catch {
           Swal.fire("Gagal!", "Gagal menghapus pengguna.", "error");
         }
       }
@@ -150,7 +148,7 @@ export default function DashboardPengguna() {
         Swal.fire("Berhasil", "Pengguna berhasil ditambahkan.", "success");
         fetchData();
       }
-    } catch (error) {
+    } catch {
       Swal.fire("Gagal", "Tidak dapat menambah pengguna. Coba lagi.", "error");
     }
   };
@@ -195,7 +193,7 @@ export default function DashboardPengguna() {
 
         Swal.fire("Berhasil", "Data pengguna berhasil diperbarui.", "success");
       }
-    } catch (error) {
+    } catch {
       Swal.fire("Gagal", "Tidak dapat memperbarui data pengguna.", "error");
     }
   };

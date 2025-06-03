@@ -10,11 +10,9 @@ import React from "react";
 import {
   FaBook,
   FaBriefcase,
-  FaBuilding,
   FaCog,
   FaEnvelope,
   FaUsers,
-  FaUserShield,
 } from "react-icons/fa";
 
 const page = () => {

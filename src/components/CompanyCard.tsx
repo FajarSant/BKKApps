@@ -1,6 +1,12 @@
 import React from "react";
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 interface Job {
@@ -15,7 +21,6 @@ interface CompanyCardProps {
     name: string;
     description: string;
     jobs: Job[];
-    imageUrl: string;
   };
 }
 

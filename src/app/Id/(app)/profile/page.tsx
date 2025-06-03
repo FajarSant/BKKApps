@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
 export default function ProfilePage() {
   return (
@@ -11,9 +12,11 @@ export default function ProfilePage() {
       <Card className="text-center shadow-md">
         <CardContent className="pt-6 pb-8">
           <div className="mx-auto mb-4 w-28 h-28 rounded-full overflow-hidden border-4 border-indigo-500">
-            <img
+            <Image
               src="/profile.jpg"
               alt="Foto Profil"
+              width={112} 
+              height={112}
               className="w-full h-full object-cover"
             />
           </div>

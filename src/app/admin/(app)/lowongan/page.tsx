@@ -70,10 +70,14 @@ interface Lowongan {
   expiredAt?: string;
   linkPendaftaran?: string;
 }
+interface Perusahaan {
+  id: number;
+  nama: string;
+}
 
 export default function DashboardLowongan() {
   const [lowonganData, setLowonganData] = useState<Lowongan[]>([]);
-  const [perusahaanData, setPerusahaanData] = useState<any[]>([]);
+  const [perusahaanData, setPerusahaanData] = useState<Perusahaan[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortNamaDir, setSortNamaDir] = useState<"asc" | "desc">("asc");
@@ -315,6 +319,19 @@ export default function DashboardLowongan() {
     setSortNamaDir(newDirection);
   };
 
+  enum JenisPekerjaan {
+    MAGANG = "magang",
+    PARUH_WAKTU = "paruh_waktu",
+    PENUH_WAKTU = "penuh_waktu",
+    FREELANCE = "freelance",
+    KONTRAK = "kontrak",
+  }
+
+  const jenisPekerjaanOptions = Object.values(JenisPekerjaan).map((value) => ({
+    value,
+    label: value.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+  }));
+
   const formFieldsLowongan = [
     {
       label: "Nama Lowongan",
@@ -339,8 +356,10 @@ export default function DashboardLowongan() {
     {
       label: "Jenis Pekerjaan",
       name: "jenisPekerjaan",
-      placeholder: "Masukkan jenis pekerjaan",
+      type: "select",
       required: true,
+      options: jenisPekerjaanOptions,
+      placeholder: "Pilih jenis pekerjaan",
     },
     {
       label: "Perusahaan",
@@ -389,15 +408,6 @@ export default function DashboardLowongan() {
       <div className="text-xl font-bold text-gray-800">{value}</div>
     </div>
   );
-
-  // Enum Jenis
-  enum JenisPekerjaan {
-    magang = "magang",
-    paruh_waktu = "paruh_waktu",
-    penuh_waktu = "penuh_waktu",
-    freelance = "freelance",
-    kontrak = "kontrak",
-  }
 
   return (
     <TooltipProvider>
