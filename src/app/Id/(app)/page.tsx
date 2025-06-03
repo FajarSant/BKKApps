@@ -22,7 +22,7 @@ interface Job {
 }
 
 interface Company {
-  id: number;            // Tambah id
+  id: number; // Tambah id
   name: string;
   description: string;
   jobs: Job[];
@@ -103,7 +103,7 @@ const HomePage: React.FC = () => {
               })) || [];
 
             return {
-              id: company.id,  // tambah id di sini
+              id: company.id, 
               name: company.nama,
               description: `Alamat: ${company.alamat} | Email: ${company.email} | Telepon: ${company.telepon}`,
               imageUrl: company.gambar?.trim()
@@ -112,8 +112,7 @@ const HomePage: React.FC = () => {
               jobs,
             };
           })
-          .filter((company) => company.jobs.length > 0); // Filter perusahaan tanpa lowongan
-
+          .filter((company) => company.jobs.length > 5);
         setCompanies(formattedCompanies);
       } catch (error) {
         console.error("Error fetching companies", error);
@@ -146,24 +145,22 @@ const HomePage: React.FC = () => {
           </CardContent>
         </Card>
       )}
-
-      <div className="mb-6">
-        <Button
-          size="lg"
-          className="w-full"
-          variant="default"
-          onClick={() => {
-            console.log("Lihat kategori pekerjaan");
-          }}
-        >
-          Lihat Kategori Pekerjaan
-        </Button>
-      </div>
-
       <div className="grid grid-cols-1 gap-6">
         {companies.map((company) => (
           <CompanyCard key={company.id} company={company} />
         ))}
+      </div>
+      <div className="mb-6">
+        <Button
+          size="lg"
+          className="w-full mt-4"
+          variant="default"
+          onClick={() => {
+            window.location.href = "/Id/perusahaan"; // atau pakai <Link>
+          }}
+        >
+          🔍 Lihat Semua Perusahaan
+        </Button>
       </div>
     </main>
   );
