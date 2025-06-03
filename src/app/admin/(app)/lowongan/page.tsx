@@ -204,9 +204,23 @@ export default function DashboardLowongan() {
 
       if (response.status === 200) {
         Swal.fire("Berhasil", "Lowongan berhasil diperbarui.", "success");
+        const perusahaan = perusahaanData.find(
+          (p) => p.id === updatedLowongan.perusahaanId
+        );
         setLowonganData((prevData) =>
           prevData.map((lowongan) =>
-            lowongan.id === id ? { ...lowongan, ...updatedLowongan } : lowongan
+            lowongan.id === id
+              ? {
+                  ...lowongan,
+                  ...updatedLowongan,
+                  perusahaan: perusahaan
+                    ? { id: perusahaan.id, nama: perusahaan.nama }
+                    : {
+                        id: updatedLowongan.perusahaanId,
+                        nama: "Tidak diketahui",
+                      },
+                }
+              : lowongan
           )
         );
       } else {

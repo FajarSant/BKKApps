@@ -22,7 +22,7 @@ interface Job {
 }
 
 interface Company {
-  id: number; // Tambah id
+  id: number;
   name: string;
   description: string;
   jobs: Job[];
@@ -83,7 +83,6 @@ const HomePage: React.FC = () => {
     const fetchCompanies = async () => {
       try {
         const response = await axiosInstance.get("/perusahaan/getall");
-        console.log("📦 Company API response:", response.data);
 
         const data = Array.isArray(response.data)
           ? response.data
@@ -93,26 +92,46 @@ const HomePage: React.FC = () => {
           throw new Error("Response bukan array perusahaan.");
         }
 
-        const formattedCompanies: Company[] = data
-          .map((company: CompanyApiResponse) => {
-            const jobs =
-              company.lowongan?.map((job) => ({
+        const allJobs: {
+          job: JobApiResponse;
+          company: CompanyApiResponse;
+        }[] = [];
+
+        data.forEach((company: CompanyApiResponse) => {
+          company.lowongan?.forEach((job: JobApiResponse) => {
+            allJobs.push({ job, company });
+          });
+        });
+
+        // Urutkan berdasarkan tanggal dibuat terbaru
+        const sortedJobs = allJobs.sort(
+          (a, b) =>
+            new Date(b.job.dibuatPada).getTime() -
+            new Date(a.job.dibuatPada).getTime()
+        );
+
+        // Ambil 5 lowongan terbaru
+        const latestFive = sortedJobs.slice(0, 5);
+
+        // Format jadi array perusahaan dengan satu lowongan per perusahaan
+        const formattedCompanies: Company[] = latestFive.map(
+          ({ job, company }) => ({
+            id: company.id,
+            name: company.nama,
+            description: `Alamat: ${company.alamat} | Email: ${company.email} | Telepon: ${company.telepon}`,
+            imageUrl: company.gambar?.trim()
+              ? company.gambar
+              : getRandomDefaultImage(),
+            jobs: [
+              {
                 title: job.nama,
                 location: company.alamat,
                 type: job.jenisPekerjaan,
-              })) || [];
-
-            return {
-              id: company.id, 
-              name: company.nama,
-              description: `Alamat: ${company.alamat} | Email: ${company.email} | Telepon: ${company.telepon}`,
-              imageUrl: company.gambar?.trim()
-                ? company.gambar
-                : getRandomDefaultImage(),
-              jobs,
-            };
+              },
+            ],
           })
-          .filter((company) => company.jobs.length > 5);
+        );
+
         setCompanies(formattedCompanies);
       } catch (error) {
         console.error("Error fetching companies", error);
