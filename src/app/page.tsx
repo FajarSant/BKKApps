@@ -21,37 +21,33 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
-  
+
     if (!nisn || !katasandi) {
       setErrorMessage("NISN dan Kata Sandi harus diisi.");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
-      console.log("🔸 Mengirim data login:", { nisn, katasandi });
-  
       const response = await axiosInstance.post("/auth/login", {
         nisn,
         katasandi,
       });
-  
-      console.log("✅ Respons dari API /auth/login:", response.data);
-  
+
       const token = response.data?.accessToken;
-      const redirectTo = response.data?.redirectTo || "/id/home"; // fallback
-  
-      if (token) {
-        console.log("✅ Token diterima dan disimpan:", token);
-        localStorage.setItem("bkk_token", token);
-  
+      const redirectTo = response.data?.redirectTo || "/id/home";
+      const tokenName = response.data?.tokenName;
+
+      if (token && tokenName) {
+        localStorage.setItem(tokenName, token);
+
         toast.success("Login berhasil!", {
           duration: 3000,
           position: "top-center",
           icon: "✔️",
         });
-  
+
         router.push(redirectTo);
       } else {
         setErrorMessage("Token tidak ditemukan, login gagal.");
@@ -69,11 +65,11 @@ export default function LoginPage() {
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         console.error("❌ Error dari server /auth/login:", err.response?.data);
-  
+
         const errorMessage =
           err.response?.data?.message || "Terjadi kesalahan, coba lagi.";
         setErrorMessage(errorMessage);
-  
+
         toast.error(errorMessage, {
           duration: 5000,
           position: "top-center",
@@ -86,7 +82,7 @@ export default function LoginPage() {
         });
       } else {
         console.error("❌ Error jaringan:", err);
-  
+
         toast.error("Jaringan bermasalah, silakan coba lagi.", {
           duration: 5000,
           position: "top-center",
@@ -102,7 +98,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-  
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 to-zinc-100 px-4 py-12">

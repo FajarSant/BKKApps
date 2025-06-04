@@ -9,10 +9,27 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("bkk_token") || "";
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    if (typeof window !== "undefined") {
+      const pathname = window.location.pathname;
+
+      let token: string = "";
+
+      if (pathname.startsWith("/admin")) {
+        token = localStorage.getItem("admin_token") ?? "";
+      } else if (pathname.startsWith("/Id")) {
+        token =
+          localStorage.getItem("siswa_token") ??
+          localStorage.getItem("alumni_token") ??
+          "";
+      } else {
+        token = localStorage.getItem("bkk_token") ?? "";
+      }
+
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
     }
+
     return config;
   },
   (error) => {
@@ -23,8 +40,26 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    if (typeof window !== "undefined" && error.response?.status === 401) {
+      const pathname = window.location.pathname;
+
+      const adminToken = localStorage.getItem("admin_token");
+      const siswaToken = localStorage.getItem("siswa_token");
+      const alumniToken = localStorage.getItem("alumni_token");
+
+      const isAdmin = pathname.startsWith("/admin");
+      const isSiswaOrAlumni = pathname.startsWith("/Id");
+
+      const noToken =
+        (isAdmin && !adminToken) ||
+        (isSiswaOrAlumni && !siswaToken && !alumniToken) ||
+        (!isAdmin && !isSiswaOrAlumni);
+
+      if (noToken) {
+        window.location.href = "/";
+      }
     }
+
     return Promise.reject(error);
   }
 );
