@@ -54,7 +54,7 @@ const Page = () => {
   }, []);
 
   return (
-    <main className="container max-w-4xl mx-auto px-4 py-8 space-y-10">
+    <main className="container mx-auto px-4 py-8 space-y-10">
       {/* Header */}
       <header className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">
@@ -66,7 +66,7 @@ const Page = () => {
       </header>
 
       {/* Content */}
-      <section className="space-y-6">
+      <section className="space-y-6 mx-8">
         {loading &&
           [...Array(3)].map((_, idx) => <SkeletonJobCard key={idx} />)}
 

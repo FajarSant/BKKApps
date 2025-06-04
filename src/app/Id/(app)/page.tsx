@@ -129,7 +129,7 @@ const HomePage: React.FC = () => {
   return (
     <main className="container mx-auto p-6">
       {userData && (
-        <Card className="mb-8 shadow-lg">
+        <Card className="mb-8 ">
           <CardContent className="flex items-center space-x-6">
             <div className="flex-shrink-0">
               <FaUser className="w-24 h-24 text-gray-500 rounded-full border-2 border-gray-300 p-2" />

@@ -43,7 +43,6 @@ export default function PerusahaanPage() {
     const fetchCompanies = async () => {
       try {
         const response = await axiosInstance.get("/perusahaan/getall");
-        console.log("📦 Company API response:", response.data);
 
         const data = Array.isArray(response.data)
           ? response.data
@@ -86,7 +85,7 @@ export default function PerusahaanPage() {
   }, []);
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-4 w-full relative border-b-2">
         <button
           onClick={() => router.back()}
