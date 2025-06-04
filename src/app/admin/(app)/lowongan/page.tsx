@@ -69,6 +69,7 @@ interface Lowongan {
   dibuatPada: string;
   expiredAt?: string;
   linkPendaftaran?: string;
+  [key: string]: unknown;
 }
 interface Perusahaan {
   id: number;

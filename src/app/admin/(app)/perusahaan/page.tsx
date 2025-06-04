@@ -29,11 +29,12 @@ import { FaSortAlphaDown, FaSortAlphaDownAlt } from "react-icons/fa";
 interface Perusahaan {
   id: number;
   nama: string;
-  gambar?: string;
+  // gambar?: string;
   alamat: string;
   email: string;
   telepon?: string;
   deskripsi?: string;
+  [key: string]: unknown;
 }
 
 const DashboardPerusahaan = () => {
@@ -245,11 +246,6 @@ const DashboardPerusahaan = () => {
       placeholder: "Masukkan email",
     },
     {
-      label: "Gambar",
-      name: "gambar",
-      placeholder: "Masukkan Url Gambar Jika Ada",
-    },
-    {
       label: "Telepon",
       name: "telepon",
       placeholder: "Masukkan nomor telepon",
@@ -305,7 +301,6 @@ const DashboardPerusahaan = () => {
                   )}
                 </TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Url Gambar</TableHead>
                 <TableHead>Telepon</TableHead>
                 <TableHead>Alamat</TableHead>
                 <TableHead>Actions</TableHead>
@@ -322,7 +317,6 @@ const DashboardPerusahaan = () => {
                       {highlightText(item.nama, searchTerm)}
                     </TableCell>
                     <TableCell>{item.email}</TableCell>
-                    <TableCell>{item.gambar}</TableCell>
                     <TableCell>{item.telepon}</TableCell>
                     <TableCell>{item.alamat}</TableCell>
                     <TableCell>

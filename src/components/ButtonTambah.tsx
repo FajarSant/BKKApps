@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, ChangeEvent } from "react";
 import { FaPlus } from "react-icons/fa";
 import {
   Dialog,
@@ -39,28 +39,19 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
   onSubmit,
   buttonText = "Tambah Data",
 }) => {
-  const [open, setOpen] = useState<boolean>(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<Map<string, string>>(new Map());
-
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setErrors({});
-    setFormData(new Map());
-    setOpen(false);
-  };
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => {
-      const newData = new Map(prev);
-      newData.set(name, value);
-      return newData;
-    });
+    setFormData((prev) => new Map(prev).set(name, value));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => new Map(prev).set(name, value));
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -68,8 +59,8 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
     const formErrors: { [key: string]: string } = {};
 
     formFields.forEach((field) => {
-      const fieldValue = formData.get(field.name);
-      if (field.required && !fieldValue) {
+      const value = formData.get(field.name);
+      if (field.required && !value) {
         formErrors[field.name] = `${field.label} harus diisi!`;
       }
     });
@@ -79,101 +70,104 @@ const ButtonTambah: React.FC<ButtonTambahProps> = ({
       return;
     }
 
-    const formDataToSubmit = new FormData();
-    formData.forEach((value, key) => {
-      formDataToSubmit.append(key, value);
-    });
+    const submittedData = new FormData();
+    formData.forEach((value, key) => submittedData.append(key, value));
 
-    onSubmit(formDataToSubmit);
-    handleClose();
+    onSubmit(submittedData);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setFormData(new Map());
+    setErrors({});
+    setOpen(false);
   };
 
   return (
-    <div>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="default" size="sm" onClick={handleOpen}>
-            <FaPlus className="w-4 h-4 mr-1" /> {buttonText}
-          </Button>
-        </DialogTrigger>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) resetForm();
+      }}
+    >
+      {" "}
+      <DialogTrigger asChild>
+        <Button variant="default" size="sm" onClick={() => setOpen(true)}>
+          <FaPlus className="w-4 h-4 mr-1" />
+          {buttonText}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[600px] overflow-y-auto">
+        <DialogTitle>{buttonText}</DialogTitle>
+        <DialogDescription>
+          Silakan isi detail yang diperlukan di bawah ini.
+        </DialogDescription>
 
-        <DialogContent className="max-h-[600px] overflow-y-auto">
-          <DialogTitle>{buttonText}</DialogTitle>
-          <DialogDescription>
-            Silakan isi detail yang diperlukan di bawah ini.
-          </DialogDescription>
+        <form onSubmit={handleSubmit}>
+          {formFields.map((field, index) => (
+            <div key={index} className="mb-4">
+              <label htmlFor={field.name} className="block mb-1 font-medium">
+                {field.label}
+              </label>
 
-          <form onSubmit={handleSubmit}>
-            {formFields.map((field, index) => (
-              <div key={index} className="mb-4">
-                <label className="block mb-1 font-medium">{field.label}</label>
+              {field.type === "select" && field.options ? (
+                <Select
+                  value={formData.get(field.name) || ""}
+                  onValueChange={(value) =>
+                    handleSelectChange(field.name, value)
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    {formData.get(field.name)
+                      ? field.options.find(
+                          (opt) => opt.value === formData.get(field.name)
+                        )?.label
+                      : `Pilih ${field.label}`}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {field.options.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : field.type === "textarea" ? (
+                <Textarea
+                  id={field.name}
+                  name={field.name}
+                  placeholder={field.placeholder}
+                  className="mt-2 w-full"
+                  value={formData.get(field.name) || ""}
+                  onChange={handleInputChange}
+                />
+              ) : (
+                <Input
+                  id={field.name}
+                  type={field.type || "text"}
+                  name={field.name}
+                  placeholder={field.placeholder}
+                  className="mt-2 w-full"
+                  value={formData.get(field.name) || ""}
+                  onChange={handleInputChange}
+                />
+              )}
 
-                {field.type === "select" ? (
-                  <Select
-                    value={formData.get(field.name) || ""}
-                    onValueChange={(value) => {
-                      setFormData((prev) => {
-                        const newData = new Map(prev);
-                        newData.set(field.name, value);
-                        return newData;
-                      });
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <span>
-                        {formData.get(field.name)
-                          ? field.options?.find(
-                              (opt) => opt.value === formData.get(field.name)
-                            )?.label
-                          : `Pilih ${field.label}`}
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {field.options?.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : field.type === "textarea" ? (
-                  <Textarea
-                    name={field.name}
-                    placeholder={field.placeholder}
-                    className="mt-2 p-2 border rounded-md w-full"
-                    value={formData.get(field.name) || ""}
-                    onChange={handleInputChange}
-                    required
-                  />
-                ) : (
-                  <Input
-                    type={field.type || "text"}
-                    name={field.name}
-                    placeholder={field.placeholder}
-                    className="mt-2 p-2 border rounded-md w-full"
-                    value={formData.get(field.name) || ""}
-                    onChange={handleInputChange}
-                    required
-                  />
-                )}
-
-                {errors[field.name] && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors[field.name]}
-                  </p>
-                )}
-              </div>
-            ))}
-
-            <div className="mt-4 flex justify-end">
-              <Button type="submit" variant="default">
-                {buttonText}
-              </Button>
+              {errors[field.name] && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors[field.name]}
+                </p>
+              )}
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+          ))}
+
+          <div className="mt-4 flex justify-end">
+            <Button type="submit">{buttonText}</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

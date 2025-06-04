@@ -43,6 +43,7 @@ interface Pengguna {
   jenisKelamin?: string;
   dibuatPada: string;
   katasandi?: string;
+  [key: string]: unknown;
 }
 
 export default function DashboardPengguna() {
