@@ -422,7 +422,6 @@ export default function DashboardLowongan() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Statistik */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             <StatCard
               icon={
@@ -481,12 +480,11 @@ export default function DashboardLowongan() {
           </div>
 
           <Card>
-             <CardHeader>
-            <CardTitle className="text-2xl text-center mb-4">
-              Table Lowongan
-            </CardTitle>
-          </CardHeader>
-            {/* Aksi dan Search */}
+            <CardHeader>
+              <CardTitle className="text-2xl text-center mb-4">
+                Table Lowongan
+              </CardTitle>
+            </CardHeader>
             <CardContent>
               <div className="grid gap-4 lg:grid-cols-2 lg:items-center mb-4">
                 <div className="flex flex-wrap gap-3">

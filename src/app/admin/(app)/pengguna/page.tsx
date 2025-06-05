@@ -40,7 +40,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Pengguna {
@@ -140,7 +146,6 @@ export default function DashboardPengguna() {
     });
   };
 
-  // handleAdd
   const handleAdd = async (formData: FormData) => {
     const data = formFields.reduce((acc, field) => {
       let value = formData.get(field.name);
@@ -148,8 +153,6 @@ export default function DashboardPengguna() {
       if (field.type === "select" && value !== null) {
         value = value.toString();
       }
-
-      // Format tanggal ke ISO string jika ada
       if (field.name === "tanggalLahir" && value) {
         value = new Date(value.toString()).toISOString();
       }
@@ -168,8 +171,6 @@ export default function DashboardPengguna() {
       Swal.fire("Gagal", "Tidak dapat menambah pengguna. Coba lagi.", "error");
     }
   };
-
-  // handleEdit
   const handleEdit = async (id: number, formData: FormData) => {
     const data = formFields.reduce((acc, field) => {
       let value = formData.get(field.name);
@@ -178,12 +179,10 @@ export default function DashboardPengguna() {
         value = value.toString();
       }
 
-      // Jangan kirim katasandi jika kosong
       if (field.name === "katasandi" && (!value || value === "")) {
-        return acc; // skip
+        return acc;
       }
 
-      // Format tanggal ke ISO jika ada
       if (field.name === "tanggalLahir" && value) {
         value = new Date(value.toString()).toISOString();
       }
@@ -331,9 +330,7 @@ export default function DashboardPengguna() {
             Kelola dan pantau semua data lowongan pengguna di sini.
           </CardDescription>
         </CardHeader>
-        {/* Ringkasan Statistik */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Total Pengguna */}
           <Card className="p-6 text-center shadow-sm">
             <div className="flex flex-col items-center space-y-2">
               <div className="bg-blue-100 p-3 rounded-full">
@@ -347,8 +344,6 @@ export default function DashboardPengguna() {
               </p>
             </div>
           </Card>
-
-          {/* Admin */}
           <Card className="p-6 text-center shadow-sm">
             <div className="flex flex-col items-center space-y-2">
               <div className="bg-red-100 p-3 rounded-full">
@@ -360,8 +355,6 @@ export default function DashboardPengguna() {
               </p>
             </div>
           </Card>
-
-          {/* Siswa */}
           <Card className="p-6 text-center shadow-sm">
             <div className="flex flex-col items-center space-y-2">
               <div className="bg-green-100 p-3 rounded-full">
@@ -373,8 +366,6 @@ export default function DashboardPengguna() {
               </p>
             </div>
           </Card>
-
-          {/* Alumni */}
           <Card className="p-6 text-center shadow-sm">
             <div className="flex flex-col items-center space-y-2">
               <div className="bg-yellow-100 p-3 rounded-full">
@@ -389,8 +380,6 @@ export default function DashboardPengguna() {
             </div>
           </Card>
         </div>
-
-        {/* Card utama */}
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center mb-4">
@@ -500,7 +489,6 @@ export default function DashboardPengguna() {
               </Table>
             )}
 
-            {/* Pagination */}
             {!loading && totalPages > 1 && (
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 gap-2">
                 <div className="text-sm text-muted-foreground">

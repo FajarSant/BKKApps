@@ -292,13 +292,12 @@ const DashboardPerusahaan = () => {
           </CardDescription>
         </CardHeader>
         <Card>
-           <CardHeader>
+          <CardHeader>
             <CardTitle className="text-2xl text-center mb-4">
               Table Perusahaan
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Top Controls */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex flex-wrap gap-2">
                 <ButtonTambah formFields={formFields} onSubmit={handleAdd} />
@@ -309,8 +308,6 @@ const DashboardPerusahaan = () => {
                 <SearchInput value={searchTerm} onChange={setSearchTerm} />
               </div>
             </div>
-
-            {/* Table or Loading State */}
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
@@ -376,8 +373,6 @@ const DashboardPerusahaan = () => {
                 </TableBody>
               </Table>
             )}
-
-            {/* Pagination */}
             {!isLoading && totalPages > 1 && (
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 gap-2">
                 <div className="text-sm text-muted-foreground">
