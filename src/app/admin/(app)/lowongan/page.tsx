@@ -54,6 +54,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Lowongan {
   id: number;
@@ -412,221 +413,229 @@ export default function DashboardLowongan() {
 
   return (
     <TooltipProvider>
-      <section>
-        <Card>
-          <CardHeader>
-            <CardTitle>Dashboard Lowongan</CardTitle>
-            <CardDescription>
-              Kelola dan pantau semua data lowongan perusahaan di sini.
-            </CardDescription>
-          </CardHeader>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">Dashboard Lowongan</CardTitle>
+          <CardDescription>
+            Kelola dan pantau semua data lowongan perusahaan di sini.
+          </CardDescription>
+        </CardHeader>
 
-          <CardContent className="space-y-6">
-            {/* Statistik */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              <StatCard
-                icon={
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <FiBriefcase className="text-blue-600" />
-                  </div>
-                }
-                label="Total Lowongan"
-                value={totalLowongan}
-              />
-              <StatCard
-                icon={
-                  <div className="bg-orange-100 p-2 rounded-full">
-                    <FiClock className="text-orange-500" />
-                  </div>
-                }
-                label="Magang"
-                value={jenisCounts.magang}
-              />
-              <StatCard
-                icon={
-                  <div className="bg-yellow-100 p-2 rounded-full">
-                    <FiUser className="text-yellow-600" />
-                  </div>
-                }
-                label="Paruh Waktu"
-                value={jenisCounts.paruh_waktu}
-              />
-              <StatCard
-                icon={
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <FiUserCheck className="text-green-600" />
-                  </div>
-                }
-                label="Penuh Waktu"
-                value={jenisCounts.penuh_waktu}
-              />
-              <StatCard
-                icon={
-                  <div className="bg-purple-100 p-2 rounded-full">
-                    <FiUser className="text-purple-600" />
-                  </div>
-                }
-                label="Freelance"
-                value={jenisCounts.freelance}
-              />
-              <StatCard
-                icon={
-                  <div className="bg-red-100 p-2 rounded-full">
-                    <FiCalendar className="text-red-600" />
-                  </div>
-                }
-                label="Kontrak"
-                value={jenisCounts.kontrak}
-              />
-            </div>
-
-            {/* Aksi dan Search */}
-            <div className="grid gap-4 lg:grid-cols-2 lg:items-center">
-              <div className="flex flex-wrap gap-3">
-                <BtnTambahPengguna
-                  formFields={formFieldsLowongan}
-                  onSubmit={handleAdd}
-                />
-                <ImportButtonExcel onUpload={handleUpload} />
-                <ExportButtonExcel onClick={handleExportExcel} />
-              </div>
-              <div className="w-full lg:w-full">
-                <SearchInput value={searchTerm} onChange={setSearchTerm} />
-              </div>
-            </div>
-
-            {/* Tabel Lowongan */}
-            {loading ? (
-              <div className="text-center py-10 text-muted-foreground">
-                Memuat data...
-              </div>
-            ) : (
-              <Table>
-                <TableCaption className="text-sm py-2 text-muted-foreground">
-                  Daftar lowongan pekerjaan yang tersedia.
-                </TableCaption>
-                <TableHeader>
-                  <TableRow className="bg-gray-100">
-                    <TableHead
-                      onClick={handleSortNama}
-                      className="cursor-pointer select-none flex items-center gap-2"
-                    >
-                      <span>Nama</span>
-                      {sortNamaDir === "asc" ? (
-                        <FaSortAlphaDown className="h-4 w-4" />
-                      ) : (
-                        <FaSortAlphaDownAlt className="h-4 w-4" />
-                      )}
-                    </TableHead>
-                    <TableHead>Ketentuan</TableHead>
-                    <TableHead>Persyaratan</TableHead>
-                    <TableHead>Jenis</TableHead>
-                    <TableHead>Perusahaan</TableHead>
-                    <TableHead>Dibuat</TableHead>
-                    <TableHead>Expired</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedData.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">
-                        {highlightText(item.nama, searchTerm)}
-                      </TableCell>
-                      <TableCell>{item.ketentuan}</TableCell>
-                      <TableCell>{item.persyaratan}</TableCell>
-                      <TableCell>{item.jenisPekerjaan}</TableCell>
-                      <TableCell>{item.perusahaan.nama}</TableCell>
-                      <TableCell>
-                        {new Date(item.dibuatPada).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {item.expiredAt
-                          ? new Date(item.expiredAt).toLocaleDateString()
-                          : "-"}
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <EditButton
-                          formFields={formFieldsLowongan}
-                          onSubmit={handleEdit}
-                          editData={item}
-                        />
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(item.id)}
-                              className="hover:bg-red-100"
-                            >
-                              <AiOutlineDelete className="h-5 w-5 text-red-500" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Hapus</TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-            {!loading && totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 gap-2">
-                <div className="text-sm text-muted-foreground">
-                  Menampilkan {paginatedData.length} dari {filteredData.length}{" "}
-                  data
+        <CardContent className="space-y-6">
+          {/* Statistik */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <StatCard
+              icon={
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <FiBriefcase className="text-blue-600" />
                 </div>
-                <Pagination>
-                  <PaginationContent className="flex-wrap justify-center sm:justify-end">
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          setCurrentPage((prev) => Math.max(prev - 1, 1))
-                        }
-                        className={
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : ""
-                        }
-                      />
-                    </PaginationItem>
+              }
+              label="Total Lowongan"
+              value={totalLowongan}
+            />
+            <StatCard
+              icon={
+                <div className="bg-orange-100 p-2 rounded-full">
+                  <FiClock className="text-orange-500" />
+                </div>
+              }
+              label="Magang"
+              value={jenisCounts.magang}
+            />
+            <StatCard
+              icon={
+                <div className="bg-yellow-100 p-2 rounded-full">
+                  <FiUser className="text-yellow-600" />
+                </div>
+              }
+              label="Paruh Waktu"
+              value={jenisCounts.paruh_waktu}
+            />
+            <StatCard
+              icon={
+                <div className="bg-green-100 p-2 rounded-full">
+                  <FiUserCheck className="text-green-600" />
+                </div>
+              }
+              label="Penuh Waktu"
+              value={jenisCounts.penuh_waktu}
+            />
+            <StatCard
+              icon={
+                <div className="bg-purple-100 p-2 rounded-full">
+                  <FiUser className="text-purple-600" />
+                </div>
+              }
+              label="Freelance"
+              value={jenisCounts.freelance}
+            />
+            <StatCard
+              icon={
+                <div className="bg-red-100 p-2 rounded-full">
+                  <FiCalendar className="text-red-600" />
+                </div>
+              }
+              label="Kontrak"
+              value={jenisCounts.kontrak}
+            />
+          </div>
 
-                    {Array.from({ length: totalPages }, (_, index) => (
-                      <PaginationItem key={index}>
-                        <button
-                          onClick={() => setCurrentPage(index + 1)}
-                          className={`px-3 py-1 rounded-md text-sm ${
-                            currentPage === index + 1
-                              ? "bg-primary text-white"
-                              : "hover:bg-muted text-gray-700"
-                          }`}
-                        >
-                          {index + 1}
-                        </button>
-                      </PaginationItem>
-                    ))}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          setCurrentPage((prev) =>
-                            Math.min(prev + 1, totalPages)
-                          )
-                        }
-                        className={
-                          currentPage === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : ""
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+          <Card>
+             <CardHeader>
+            <CardTitle className="text-2xl text-center mb-4">
+              Table Lowongan
+            </CardTitle>
+          </CardHeader>
+            {/* Aksi dan Search */}
+            <CardContent>
+              <div className="grid gap-4 lg:grid-cols-2 lg:items-center mb-4">
+                <div className="flex flex-wrap gap-3">
+                  <BtnTambahPengguna
+                    formFields={formFieldsLowongan}
+                    onSubmit={handleAdd}
+                  />
+                  <ImportButtonExcel onUpload={handleUpload} />
+                  <ExportButtonExcel onClick={handleExportExcel} />
+                </div>
+                <div className="w-full lg:w-full">
+                  <SearchInput value={searchTerm} onChange={setSearchTerm} />
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+
+              {loading ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full rounded-md" />
+                  ))}
+                </div>
+              ) : (
+                <Table>
+                  <TableCaption className="text-sm py-2 text-muted-foreground">
+                    Daftar lowongan pekerjaan yang tersedia.
+                  </TableCaption>
+                  <TableHeader>
+                    <TableRow className="bg-gray-100">
+                      <TableHead
+                        onClick={handleSortNama}
+                        className="cursor-pointer select-none flex items-center gap-2"
+                      >
+                        <span>Nama</span>
+                        {sortNamaDir === "asc" ? (
+                          <FaSortAlphaDown className="h-4 w-4" />
+                        ) : (
+                          <FaSortAlphaDownAlt className="h-4 w-4" />
+                        )}
+                      </TableHead>
+                      <TableHead>Ketentuan</TableHead>
+                      <TableHead>Persyaratan</TableHead>
+                      <TableHead>Jenis</TableHead>
+                      <TableHead>Perusahaan</TableHead>
+                      <TableHead>Dibuat</TableHead>
+                      <TableHead>Expired</TableHead>
+                      <TableHead className="text-right">Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedData.map((item) => (
+                      <TableRow key={item.id} className="hover:bg-gray-50">
+                        <TableCell className="font-medium">
+                          {highlightText(item.nama, searchTerm)}
+                        </TableCell>
+                        <TableCell>{item.ketentuan}</TableCell>
+                        <TableCell>{item.persyaratan}</TableCell>
+                        <TableCell>{item.jenisPekerjaan}</TableCell>
+                        <TableCell>{item.perusahaan.nama}</TableCell>
+                        <TableCell>
+                          {new Date(item.dibuatPada).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {item.expiredAt
+                            ? new Date(item.expiredAt).toLocaleDateString()
+                            : "-"}
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <EditButton
+                            formFields={formFieldsLowongan}
+                            onSubmit={handleEdit}
+                            editData={item}
+                          />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(item.id)}
+                                className="hover:bg-red-100"
+                              >
+                                <AiOutlineDelete className="h-5 w-5 text-red-500" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Hapus</TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+              {!loading && totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 gap-2">
+                  <div className="text-sm text-muted-foreground">
+                    Menampilkan {paginatedData.length} dari{" "}
+                    {filteredData.length} data
+                  </div>
+                  <Pagination>
+                    <PaginationContent className="flex-wrap justify-center sm:justify-end">
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                          className={
+                            currentPage === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        />
+                      </PaginationItem>
+
+                      {Array.from({ length: totalPages }, (_, index) => (
+                        <PaginationItem key={index}>
+                          <button
+                            onClick={() => setCurrentPage(index + 1)}
+                            className={`px-3 py-1 rounded-md text-sm ${
+                              currentPage === index + 1
+                                ? "bg-primary text-white"
+                                : "hover:bg-muted text-gray-700"
+                            }`}
+                          >
+                            {index + 1}
+                          </button>
+                        </PaginationItem>
+                      ))}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages)
+                            )
+                          }
+                          className={
+                            currentPage === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
     </TooltipProvider>
   );
 }

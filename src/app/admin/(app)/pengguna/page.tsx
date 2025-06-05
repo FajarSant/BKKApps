@@ -29,7 +29,19 @@ import {
   FaSortAlphaDownAlt,
   FaSortNumericDown,
   FaSortNumericDownAlt,
+  FaUserCheck,
+  FaUserGraduate,
+  FaUserShield,
 } from "react-icons/fa";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Pengguna {
   id: number;
@@ -47,16 +59,19 @@ interface Pengguna {
 }
 
 export default function DashboardPengguna() {
-  const [data, setData] = useState<Pengguna[]>([]);
+  const [PenggunaData, setPenggunaData] = useState<Pengguna[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortNamaDir, setSortNamaDir] = useState<"asc" | "desc">("asc");
   const [sortNisnDir, setSortNisnDir] = useState<"asc" | "desc">("asc");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const fetchData = async () => {
     try {
       const response = await axiosInstance.get("/pengguna/getall");
-      setData(response.data);
+      setPenggunaData(response.data);
     } catch (error) {
       console.error("Gagal mengambil data pengguna:", error);
     } finally {
@@ -181,7 +196,7 @@ export default function DashboardPengguna() {
       const response = await axiosInstance.put(`/pengguna/update/${id}`, data);
 
       if (response.data) {
-        setData((prev) =>
+        setPenggunaData((prev) =>
           prev.map((item) =>
             item.id === id
               ? {
@@ -215,23 +230,23 @@ export default function DashboardPengguna() {
 
   const handleSortNama = () => {
     const newDirection = sortNamaDir === "asc" ? "desc" : "asc";
-    const sorted = [...data].sort((a, b) =>
+    const sorted = [...PenggunaData].sort((a, b) =>
       newDirection === "asc"
         ? a.nama.localeCompare(b.nama)
         : b.nama.localeCompare(a.nama)
     );
-    setData(sorted);
+    setPenggunaData(sorted);
     setSortNamaDir(newDirection);
   };
 
   const handleSortNisn = () => {
     const newDirection = sortNisnDir === "asc" ? "desc" : "asc";
-    const sorted = [...data].sort((a, b) => {
+    const sorted = [...PenggunaData].sort((a, b) => {
       const aNisn = parseInt(a.nisn || "0", 10);
       const bNisn = parseInt(b.nisn || "0", 10);
       return newDirection === "asc" ? aNisn - bNisn : bNisn - aNisn;
     });
-    setData(sorted);
+    setPenggunaData(sorted);
     setSortNisnDir(newDirection);
   };
 
@@ -297,120 +312,250 @@ export default function DashboardPengguna() {
       ],
     },
   ];
+  const filteredData = PenggunaData.filter((item) =>
+    item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <TooltipProvider>
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <ButtonTambah formFields={formFields} onSubmit={handleAdd} />
-            <ImportButtonExcel onUpload={handleUpload} />
+      <Card className="p-6 space-y-6">
+        <CardHeader>
+          <CardTitle className="text-2xl">Dashboard Pengguna</CardTitle>
+          <CardDescription>
+            Kelola dan pantau semua data lowongan pengguna di sini.
+          </CardDescription>
+        </CardHeader>
+        {/* Ringkasan Statistik */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Total Pengguna */}
+          <Card className="p-6 text-center shadow-sm">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FaUserShield className="text-blue-600 h-6 w-6" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Total Pengguna
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {filteredData.length}
+              </p>
+            </div>
+          </Card>
 
-            <ExportButtonExcel onClick={handleExportExcel} />
-          </div>
+          {/* Admin */}
+          <Card className="p-6 text-center shadow-sm">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="bg-red-100 p-3 rounded-full">
+                <FaUserShield className="text-red-500 h-6 w-6" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">Admin</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {filteredData.filter((user) => user.peran === "admin").length}
+              </p>
+            </div>
+          </Card>
 
-          <div className="w-full md:w-1/3 md:text-right">
-            <SearchInput value={searchTerm} onChange={setSearchTerm} />
-          </div>
+          {/* Siswa */}
+          <Card className="p-6 text-center shadow-sm">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="bg-green-100 p-3 rounded-full">
+                <FaUserGraduate className="text-green-500 h-6 w-6" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">Siswa</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {filteredData.filter((user) => user.peran === "siswa").length}
+              </p>
+            </div>
+          </Card>
+
+          {/* Alumni */}
+          <Card className="p-6 text-center shadow-sm">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="bg-yellow-100 p-3 rounded-full">
+                <FaUserCheck className="text-yellow-500 h-6 w-6" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Alumni
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {filteredData.filter((user) => user.peran === "alumni").length}
+              </p>
+            </div>
+          </Card>
         </div>
 
-        {loading ? (
-          <p>Memuat data pengguna...</p>
-        ) : (
-          <Table>
-            <TableCaption>Daftar pengguna yang terdaftar.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  onClick={handleSortNama}
-                  style={{
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  Nama
-                  {sortNamaDir === "asc" ? (
-                    <FaSortAlphaDown style={{ marginLeft: 5 }} />
-                  ) : (
-                    <FaSortAlphaDownAlt style={{ marginLeft: 5 }} />
-                  )}
-                </TableHead>
+        {/* Card utama */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center mb-4">
+              Table Pengguna
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex flex-wrap gap-2">
+                <ButtonTambah formFields={formFields} onSubmit={handleAdd} />
+                <ImportButtonExcel onUpload={handleUpload} />
+                <ExportButtonExcel onClick={handleExportExcel} />
+              </div>
+              <div className="w-full md:w-1/3">
+                <SearchInput value={searchTerm} onChange={setSearchTerm} />
+              </div>
+            </div>
 
-                <TableHead>Email</TableHead>
-                <TableHead>Peran</TableHead>
-                <TableHead
-                  onClick={handleSortNisn}
-                  style={{
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  NISN
-                  {sortNisnDir === "asc" ? (
-                    <FaSortNumericDown style={{ marginLeft: 5 }} />
-                  ) : (
-                    <FaSortNumericDownAlt style={{ marginLeft: 5 }} />
-                  )}
-                </TableHead>
-
-                <TableHead>Jenis Kelamin</TableHead>
-                <TableHead>Telepon</TableHead>
-                <TableHead>Tanggal Lahir</TableHead>
-                <TableHead>Dibuat</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data
-                .filter((item) =>
-                  item.nama.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-                .map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      {highlightText(item.nama, searchTerm)}
-                    </TableCell>
-                    <TableCell>{item.email}</TableCell>
-                    <TableCell>{item.peran}</TableCell>
-                    <TableCell>{item.nisn}</TableCell>
-                    <TableCell>{item.jenisKelamin || "-"}</TableCell>
-                    <TableCell>{item.telepon || "-"}</TableCell>
-                    <TableCell>
-                      {item.tanggalLahir
-                        ? new Date(item.tanggalLahir).toLocaleDateString()
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(item.dibuatPada).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <EditButton
-                        key={`edit-button-${item.id}`}
-                        formFields={formFields}
-                        onSubmit={handleEdit}
-                        editData={item}
-                      />
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <AiOutlineDelete className="h-5 w-5 text-red-500" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Hapus</TooltipContent>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-md" />
                 ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+              </div>
+            ) : (
+              <Table>
+                <TableCaption>Daftar pengguna yang terdaftar.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead
+                      onClick={handleSortNama}
+                      className="cursor-pointer flex items-center"
+                    >
+                      Nama
+                      {sortNamaDir === "asc" ? (
+                        <FaSortAlphaDown className="ml-2" />
+                      ) : (
+                        <FaSortAlphaDownAlt className="ml-2" />
+                      )}
+                    </TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Peran</TableHead>
+                    <TableHead
+                      onClick={handleSortNisn}
+                      className="cursor-pointer flex items-center"
+                    >
+                      NISN
+                      {sortNisnDir === "asc" ? (
+                        <FaSortNumericDown className="ml-2" />
+                      ) : (
+                        <FaSortNumericDownAlt className="ml-2" />
+                      )}
+                    </TableHead>
+                    <TableHead>Jenis Kelamin</TableHead>
+                    <TableHead>Telepon</TableHead>
+                    <TableHead>Tanggal Lahir</TableHead>
+                    <TableHead>Dibuat</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData
+                    .filter((item) =>
+                      item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">
+                          {highlightText(item.nama, searchTerm)}
+                        </TableCell>
+                        <TableCell>{item.email}</TableCell>
+                        <TableCell>{item.peran}</TableCell>
+                        <TableCell>{item.nisn}</TableCell>
+                        <TableCell>{item.jenisKelamin || "-"}</TableCell>
+                        <TableCell>{item.telepon || "-"}</TableCell>
+                        <TableCell>
+                          {item.tanggalLahir
+                            ? new Date(item.tanggalLahir).toLocaleDateString()
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(item.dibuatPada).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <EditButton
+                            key={`edit-button-${item.id}`}
+                            formFields={formFields}
+                            onSubmit={handleEdit}
+                            editData={item}
+                          />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                <AiOutlineDelete className="h-5 w-5 text-red-500" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Hapus</TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
+
+            {/* Pagination */}
+            {!loading && totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 gap-2">
+                <div className="text-sm text-muted-foreground">
+                  Menampilkan {paginatedData.length} dari {filteredData.length}{" "}
+                  data
+                </div>
+                <Pagination>
+                  <PaginationContent className="flex-wrap justify-center sm:justify-end">
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, index) => (
+                      <PaginationItem key={index}>
+                        <button
+                          onClick={() => setCurrentPage(index + 1)}
+                          className={`px-3 py-1 rounded-md text-sm ${
+                            currentPage === index + 1
+                              ? "bg-primary text-white"
+                              : "hover:bg-muted text-gray-700"
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        className={
+                          currentPage === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Card>
     </TooltipProvider>
   );
 }

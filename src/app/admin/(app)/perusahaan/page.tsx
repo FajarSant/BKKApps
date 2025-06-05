@@ -25,6 +25,21 @@ import SearchInput from "@/components/SearchInput";
 import EditButton from "@/components/Edit-Button";
 import ButtonTambah from "@/components/ButtonTambah";
 import { FaSortAlphaDown, FaSortAlphaDownAlt } from "react-icons/fa";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Perusahaan {
   id: number;
@@ -38,12 +53,14 @@ interface Perusahaan {
 }
 
 const DashboardPerusahaan = () => {
-  const [perusahaan, setPerusahaan] = useState<Perusahaan[]>([]);
+  const [perusahaanData, setPerusahaan] = useState<Perusahaan[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sortNamaDir, setSortNamaDir] = useState<"asc" | "desc">("asc");
 
   const isLoadingRef = useRef(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchData = useCallback(async () => {
     if (isLoadingRef.current) return;
@@ -51,10 +68,8 @@ const DashboardPerusahaan = () => {
     setIsLoading(true);
     try {
       const res = await axiosInstance.get("/perusahaan/getall");
-      console.log("Data fetched:", res.data);
       const data = Array.isArray(res.data) ? res.data : res.data.data;
 
-      console.log("Data valid:", data);
       if (Array.isArray(data)) {
         const sortedData = data.sort((a, b) => a.nama.localeCompare(b.nama));
         setPerusahaan(sortedData);
@@ -228,7 +243,7 @@ const DashboardPerusahaan = () => {
 
   const handleSortNama = () => {
     const newDirection = sortNamaDir === "asc" ? "desc" : "asc";
-    const sorted = [...perusahaan].sort((a, b) =>
+    const sorted = [...perusahaanData].sort((a, b) =>
       newDirection === "asc"
         ? a.nama.localeCompare(b.nama)
         : b.nama.localeCompare(a.nama)
@@ -258,92 +273,168 @@ const DashboardPerusahaan = () => {
     },
   ];
 
+  const filteredData = perusahaanData.filter((item) =>
+    item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <TooltipProvider>
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <ButtonTambah formFields={formFields} onSubmit={handleAdd} />
-            <ImportButtonExcel onUpload={handleImport} />
-            <ExportButtonExcel onClick={handleExportExcel} />
-          </div>
-          <div className="w-full md:w-1/3 md:text-right">
-            <SearchInput value={searchTerm} onChange={setSearchTerm} />
-          </div>
-        </div>
+      <Card className="p-6 space-y-6">
+        <CardHeader>
+          <CardTitle className="text-2xl">Dashboard Perusahaan</CardTitle>
+          <CardDescription>
+            Kelola dan pantau semua data lowongan perusahaan di sini.
+          </CardDescription>
+        </CardHeader>
+        <Card>
+           <CardHeader>
+            <CardTitle className="text-2xl text-center mb-4">
+              Table Perusahaan
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Top Controls */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex flex-wrap gap-2">
+                <ButtonTambah formFields={formFields} onSubmit={handleAdd} />
+                <ImportButtonExcel onUpload={handleImport} />
+                <ExportButtonExcel onClick={handleExportExcel} />
+              </div>
+              <div className="w-full md:w-1/3">
+                <SearchInput value={searchTerm} onChange={setSearchTerm} />
+              </div>
+            </div>
 
-        {isLoading ? (
-          <p className="text-gray-500 text-center py-4">
-            Memuat data perusahaan...
-          </p>
-        ) : perusahaan.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">
-            Tidak ada data perusahaan ditemukan.
-          </p>
-        ) : (
-          <Table>
-            <TableCaption>Daftar perusahaan terdaftar.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  onClick={handleSortNama}
-                  style={{
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  Nama
-                  {sortNamaDir === "asc" ? (
-                    <FaSortAlphaDown style={{ marginLeft: 5 }} />
-                  ) : (
-                    <FaSortAlphaDownAlt style={{ marginLeft: 5 }} />
-                  )}
-                </TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Telepon</TableHead>
-                <TableHead>Alamat</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {perusahaan
-                .filter((item) =>
-                  item.nama.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-                .map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      {highlightText(item.nama, searchTerm)}
-                    </TableCell>
-                    <TableCell>{item.email}</TableCell>
-                    <TableCell>{item.telepon}</TableCell>
-                    <TableCell>{item.alamat}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <EditButton
-                          key={`edit-button-${item.id}`}
-                          formFields={formFields}
-                          onSubmit={handleEdit}
-                          editData={item}
-                        />
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <AiOutlineDelete
-                              onClick={() => handleDelete(item.id)}
-                              className="cursor-pointer text-red-500"
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>Hapus</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+            {/* Table or Loading State */}
+            {isLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-md" />
                 ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+              </div>
+            ) : (
+              <Table>
+                <TableCaption>Daftar perusahaan terdaftar.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead
+                      onClick={handleSortNama}
+                      style={{ cursor: "pointer" }}
+                      className="flex items-center"
+                    >
+                      Nama
+                      {sortNamaDir === "asc" ? (
+                        <FaSortAlphaDown className="ml-2" />
+                      ) : (
+                        <FaSortAlphaDownAlt className="ml-2" />
+                      )}
+                    </TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Telepon</TableHead>
+                    <TableHead>Alamat</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData
+                    .filter((item) =>
+                      item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          {highlightText(item.nama, searchTerm)}
+                        </TableCell>
+                        <TableCell>{item.email}</TableCell>
+                        <TableCell>{item.telepon}</TableCell>
+                        <TableCell>{item.alamat}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <EditButton
+                              formFields={formFields}
+                              onSubmit={handleEdit}
+                              editData={item}
+                            />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <AiOutlineDelete
+                                  onClick={() => handleDelete(item.id)}
+                                  className="cursor-pointer text-red-500"
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent>Hapus</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            )}
+
+            {/* Pagination */}
+            {!isLoading && totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 gap-2">
+                <div className="text-sm text-muted-foreground">
+                  Menampilkan {paginatedData.length} dari {filteredData.length}{" "}
+                  data
+                </div>
+                <Pagination>
+                  <PaginationContent className="flex-wrap justify-center sm:justify-end">
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: totalPages }, (_, index) => (
+                      <PaginationItem key={index}>
+                        <button
+                          onClick={() => setCurrentPage(index + 1)}
+                          className={`px-3 py-1 rounded-md text-sm ${
+                            currentPage === index + 1
+                              ? "bg-primary text-white"
+                              : "hover:bg-muted text-gray-700"
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        className={
+                          currentPage === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Card>
     </TooltipProvider>
   );
 };
