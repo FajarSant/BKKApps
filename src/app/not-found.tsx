@@ -1,6 +1,5 @@
 // app/not-found.tsx
 import BackButton from "@/components/Back-Button";
-import Link from "next/link";
 
 export default function NotFound() {
   return (
