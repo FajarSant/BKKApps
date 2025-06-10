@@ -17,7 +17,8 @@ import {
   MdOutlinePerson,
 } from "react-icons/md";
 import { useRouter } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton"; 
+import { Skeleton } from "@/components/ui/skeleton";
+import axios from "axios";
 
 interface User {
   id: number;
@@ -44,14 +45,18 @@ export default function ProfilePage() {
           setError("Data profil tidak valid.");
           toast.error("Data profil tidak valid.");
         }
-      } catch (err: any) {
-        console.error("❌ Error fetching user data:", err);
-        if (err.response && err.response.status === 401) {
-          toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
-          router.push("/login");
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 401) {
+            toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
+            router.push("/login");
+          } else {
+            setError("Gagal memuat data profil. Silakan coba lagi.");
+            toast.error("Gagal memuat data profil.");
+          }
         } else {
-          setError("Gagal memuat data profil. Silakan coba lagi.");
-          toast.error("Gagal memuat data profil.");
+          setError("Terjadi kesalahan yang tidak diketahui.");
+          toast.error("Terjadi kesalahan yang tidak diketahui.");
         }
       } finally {
         setLoading(false);
@@ -71,11 +76,12 @@ export default function ProfilePage() {
     });
     router.push("/");
   };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 flex items-start justify-center">
         <div className="w-full max-w-2xl space-y-8">
-          <Card className="shadow-lg rounded-xl bg-white p-8 sm:p-10 flex flex-col items-center justify-center">
+          <Card className="rounded-xl bg-white p-8 sm:p-10 flex flex-col items-center justify-center">
             <Skeleton className="mb-6 w-32 h-32 rounded-full" />
             <Skeleton className="h-8 w-3/4 mb-2" />
             <Skeleton className="h-6 w-1/2 mb-1" />
@@ -95,6 +101,7 @@ export default function ProfilePage() {
       </div>
     );
   }
+
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-6">
@@ -161,7 +168,6 @@ export default function ProfilePage() {
 
         <Separator />
         <div className="space-y-4">
-          {" "}
           <Link href="/Id/profile/edit-profile" passHref>
             <Button
               className="w-full mb-4 justify-start text-base sm:text-lg px-6 py-3 h-auto shadow-sm hover:shadow-md transition-shadow duration-200"
@@ -170,7 +176,7 @@ export default function ProfilePage() {
               <MdOutlineEdit className="mr-3 h-5 w-5" /> Edit Profil
             </Button>
           </Link>
-          <Link href="/Id/profile/ganti-kata-sandi" passHref>
+          <Link href="/Id/profile/change-password" passHref>
             <Button
               className="w-full mb-4 justify-start text-base sm:text-lg px-6 py-3 h-auto shadow-sm hover:shadow-md transition-shadow duration-200"
               variant="outline"

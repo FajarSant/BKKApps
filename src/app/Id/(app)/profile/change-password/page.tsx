@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { MdArrowBack } from "react-icons/md";
 import { Skeleton } from "@/components/ui/skeleton";
+import axios from "axios";
 
 export default function GantiKataSandi() {
   const router = useRouter();
@@ -37,8 +38,17 @@ export default function GantiKataSandi() {
       setKataSandiLama("");
       setKataSandiBaru("");
       setKonfirmasi("");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Gagal mengubah kata sandi.");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        // error.response?.data?.message bisa jadi string atau undefined
+        const message =
+          typeof error.response?.data?.message === "string"
+            ? error.response.data.message
+            : "Gagal mengubah kata sandi.";
+        toast.error(message);
+      } else {
+        toast.error("Gagal mengubah kata sandi.");
+      }
     } finally {
       setLoading(false);
     }
