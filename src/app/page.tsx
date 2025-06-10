@@ -100,11 +100,18 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 to-zinc-100 px-4 py-12">
-      <div className="w-full max-w-md shadow-2xl border-none bg-white rounded-lg">
+    <main
+      className="min-h-screen flex items-center justify-center px-4 py-12"
+      style={{
+        backgroundImage: "url('/images/SMK.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="w-full max-w-md bg-white/50 backdrop-blur-md  rounded-lg">
         <div className="flex flex-col items-center gap-4 py-6">
           <Image
-            src="https://placehold.co/600x400/png"
+            src="/images/LogoSMK.png"
             alt="Logo Aplikasi"
             width={80}
             height={80}
@@ -165,13 +172,6 @@ export default function LoginPage() {
               {loading ? "Memuat..." : "Masuk"}
             </Button>
           </form>
-        </div>
-
-        <div className="text-sm text-center text-gray-600 mt-4 pb-6">
-          Belum punya akun?{" "}
-          <a href="#" className="text-blue-600 hover:underline">
-            Daftar
-          </a>
         </div>
       </div>
     </main>
