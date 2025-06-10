@@ -143,7 +143,7 @@ export default function LoginPage() {
                 value={nisn}
                 onChange={(e) => setNisn(e.target.value)}
                 required
-                className={errorMessage ? "border-red-500" : ""}
+                  className={`bg-white ${errorMessage ? "border-red-500" : ""}`}
               />
             </div>
 
@@ -157,7 +157,7 @@ export default function LoginPage() {
                   value={katasandi}
                   onChange={(e) => setKatasandi(e.target.value)}
                   required
-                  className={errorMessage ? "border-red-500" : ""}
+                  className={`bg-white ${errorMessage ? "border-red-500" : ""}`}
                 />
                 <button
                   type="button"

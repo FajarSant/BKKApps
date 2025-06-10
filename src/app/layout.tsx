@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BKK SMK MUDA SRAGEN",
   description: "Peluang karir yang tinggi",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png?v=4",
+    shortcut: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
