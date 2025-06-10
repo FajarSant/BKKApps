@@ -71,7 +71,7 @@ export default function GantiKataSandi() {
       </header>
 
       {/* Form Card */}
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8 mx-auto flex-grow">
+      <div className="w-full bg-white rounded-lg shadow-md p-8 mx-auto flex-grow">
         {loading ? (
           <div className="space-y-5">
             {[...Array(3)].map((_, i) => (
