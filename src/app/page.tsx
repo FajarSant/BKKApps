@@ -128,7 +128,7 @@ export default function LoginPage() {
             priority
           />
           <div className="text-center text-2xl font-semibold text-gray-800">
-            Selamat Datang Kembali!
+            Selamat Datang DI BKK SMK MUDA Sragen!
           </div>
         </div>
 
