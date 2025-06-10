@@ -10,6 +10,7 @@ import React from "react";
 import {
   FaBook,
   FaBriefcase,
+  FaBuilding,
   FaCog,
   FaEnvelope,
   FaUsers,
@@ -25,7 +26,6 @@ const page = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Menu Lowongan */}
             <Card className="hover:shadow-lg transition">
               <CardHeader className="flex items-center space-x-4">
                 <div className="text-blue-600 text-2xl">
@@ -70,6 +70,27 @@ const page = () => {
                 </Link>
               </CardContent>
             </Card>
+            <Card className="hover:shadow-lg transition">
+              <CardHeader className="flex items-center space-x-4">
+                <div className="text-yellow-600 text-2xl">
+                  <FaBuilding />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Pengguna</CardTitle>
+                  <CardDescription>
+                    Manajemen data perusahaan platform.
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href="/admin/pengguna"
+                  className="text-sm text-yellow-500 hover:underline"
+                >
+                  Kelola Pengguna →
+                </Link>
+              </CardContent>
+            </Card>
 
             {/* Menu Setting */}
             <Card className="hover:shadow-lg transition">
@@ -109,7 +130,7 @@ const page = () => {
               </CardHeader>
               <CardContent>
                 <Link
-                  href="/panduan"
+                  href="#"
                   className="text-sm text-green-500 hover:underline"
                 >
                   Lihat Panduan →
@@ -117,7 +138,6 @@ const page = () => {
               </CardContent>
             </Card>
 
-            {/* Hubungi Developer */}
             <Card className="hover:shadow-lg transition">
               <CardHeader className="flex items-center space-x-4">
                 <div className="text-red-600 text-2xl">
@@ -132,7 +152,7 @@ const page = () => {
               </CardHeader>
               <CardContent>
                 <Link
-                  href="mailto:dev@example.com"
+                  href="#"
                   className="text-sm text-red-500 hover:underline"
                 >
                   Kirim Email →

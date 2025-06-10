@@ -24,10 +24,18 @@ export default function LoginPage() {
 
     if (!nisn || !katasandi) {
       setErrorMessage("NISN dan Kata Sandi harus diisi.");
+      toast.error("Lengkapi semua field sebelum login.", {
+        duration: 4000,
+        position: "top-center",
+      });
       return;
     }
 
     setLoading(true);
+    toast.message("Memproses login...", {
+      duration: 2000,
+      position: "top-center",
+    });
 
     try {
       const response = await axiosInstance.post("/auth/login", {
@@ -38,14 +46,15 @@ export default function LoginPage() {
       const token = response.data?.accessToken;
       const redirectTo = response.data?.redirectTo || "/id/home";
       const tokenName = response.data?.tokenName;
+      const nama = response.data?.nama || "Pengguna";
 
       if (token && tokenName) {
         localStorage.setItem(tokenName, token);
 
-        toast.success("Login berhasil!", {
+        toast.success(`Selamat datang, ${nama}!`, {
           duration: 3000,
           position: "top-center",
-          icon: "✔️",
+          icon: "🎉",
         });
 
         router.push(redirectTo);
@@ -108,7 +117,7 @@ export default function LoginPage() {
         backgroundPosition: "center",
       }}
     >
-      <div className="w-full max-w-md bg-white/50 backdrop-blur-md  rounded-lg">
+      <div className="w-full max-w-md bg-white/50 backdrop-blur-md rounded-lg">
         <div className="flex flex-col items-center gap-4 py-6">
           <Image
             src="/images/LogoSMK.png"

@@ -19,10 +19,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"; 
+} from "@/components/ui/sidebar";
 import Link from "next/link";
 import axiosInstance from "@/lib/axios";
 
+// MENU
 export const menuItems = [
   {
     title: "Dashboard",
@@ -72,7 +73,6 @@ interface Profile {
 
 export function AppSidebar() {
   const pathname = usePathname();
-
   const [profile, setProfile] = useState<Profile>({
     nama: "",
     peran: "",
@@ -80,6 +80,7 @@ export function AppSidebar() {
     telepon: "",
     jenisKelamin: "",
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -88,7 +89,6 @@ export function AppSidebar() {
         setProfile({
           nama: response.data.nama || "Nama Tidak Tersedia",
           peran: response.data.peran || "Peran Tidak Tersedia",
-
           alamat: response.data.alamat || "Alamat Tidak Tersedia",
           telepon: response.data.telepon || "Telepon Tidak Tersedia",
           jenisKelamin:
@@ -96,6 +96,8 @@ export function AppSidebar() {
         });
       } catch (error) {
         console.error("Error fetching profile:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -107,21 +109,28 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent className="flex flex-col items-center py-8 px-4 mb-2 border-b-4">
-            {/* Menampilkan foto profil */}
-            <div className="h-20 w-20 overflow-hidden rounded-full">
+            <div className="flex flex-col items-center gap-4">
               <Image
-                src="/images/foto-saya.png"
-                alt="Profile Photo"
-                width={128}
-                height={128}
-                className="object-cover"
+                src="/images/LogoSMK.png"
+                alt="Logo Aplikasi"
+                width={80}
+                height={80}
+                className="object-contain"
                 priority
               />
             </div>
 
-            {/* Menampilkan nama dan peran pengguna */}
-            <h1 className="text-xl font-bold mt-4">{profile.nama}</h1>
-            <p className="text-gray-500">{profile.peran}</p>
+            {isLoading ? (
+              <>
+                <div className="w-32 h-6 bg-gray-300 rounded mt-4 animate-pulse" />
+                <div className="w-24 h-4 bg-gray-200 rounded mt-2 animate-pulse" />
+              </>
+            ) : (
+              <>
+                <h1 className="text-xl font-bold mt-4">{profile.nama}</h1>
+                <p className="text-gray-500">{profile.peran}</p>
+              </>
+            )}
           </SidebarGroupContent>
 
           <SidebarGroupContent>
